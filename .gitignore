@@ -1,2 +1,4 @@
 # Ignore visual studio solution user option(suo) file
 *.suo
+*.exe
+*.pdb
