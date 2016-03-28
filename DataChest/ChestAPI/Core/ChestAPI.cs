@@ -21,23 +21,10 @@ static class ChestAPI {
 
 
     /// <summary>
-    /// 파일을 암호화합니다.
+    /// 파일에 대한 암호화 또는 복호화 작업을 수행합니다.
     /// </summary>
     /// <param name="cp">API 호출에 필요한 옵션 정보를 담고 있는 ChestParams 클래스의 개체입니다.</param>
-    public static TaskResult EncryptFile(ChestParams cp) {
-        return InternalCryptoSelector(cp, true);
-    }
-
-    /// <summary>
-    /// 파일을 복호화합니다.
-    /// </summary>
-    /// <param name="cp">API 호출에 필요한 옵션 정보를 담고 있는 ChestParams 클래스의 개체입니다.</param>
-    public static TaskResult DecryptFile(ChestParams cp) {
-        return InternalCryptoSelector(cp, false);
-    }
-
-
-    static TaskResult InternalCryptoSelector(ChestParams cp, bool encrypt) {
+    public static TaskResult Invoke(ChestParams cp) {
         // 옵션이 유효한지 확인한다.
         TaskResult r = VerifyParameters(cp);
 
@@ -45,8 +32,9 @@ static class ChestAPI {
         if (r != TaskResult.Success) return r;
 
         // 호출!
-        return CryptoAPI.Invoke(cp, encrypt);
+        return CryptoAPI.Invoke(cp, cp.Encrypt);
     }
+    
     static TaskResult VerifyParameters(ChestParams cp) {
         // 입력 파일이 없는 경우
         if (string.IsNullOrEmpty(cp.InputFile)) return TaskResult.InvalidParameter;
@@ -56,11 +44,7 @@ static class ChestAPI {
 
         // 정의되지 않은 알고리즘을 사용한 경우
         if (cp.Algorithm >= Algorithms.LastMethod) return TaskResult.InvalidAlgorithm;
-
-        // IV 및 암호 검증
-        if (!cp.VerifyIV()) return TaskResult.InvalidIV;
-        if (!cp.VerifyPassword()) return TaskResult.InvalidPassword;
-
+        
         // 검증 끝
         return TaskResult.Success;
     }
