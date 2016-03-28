@@ -41,6 +41,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ChestAPI\Core\CryptoAPI.cs" />
     <Compile Include="ChestAPI\Helper\FileHelper.cs" />
     <Compile Include="ChestAPI\ThirdPartyCompatible\ChestAPIOptions.cs" />
     <Compile Include="ChestAPI\Types\Algorithms.cs" />

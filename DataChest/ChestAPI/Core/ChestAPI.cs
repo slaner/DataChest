@@ -45,8 +45,7 @@ static class ChestAPI {
         if (r != TaskResult.Success) return r;
 
         // 호출!
-        bool YouHaveToModifyThisSection;
-        return 0;// CryptoAPI.Invoke(cp, encrypt);
+        return CryptoAPI.Invoke(cp, encrypt);
     }
     static TaskResult VerifyParameters(ChestParams cp) {
         // 입력 파일이 없는 경우

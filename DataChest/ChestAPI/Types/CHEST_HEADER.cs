@@ -79,6 +79,21 @@ struct CHEST_HEADER {
     public ulong r_size;
 
 
+    public static CHEST_HEADER CreateHeader(FileStream fs, byte[] b) {
+        CHEST_HEADER hdr = new CHEST_HEADER(ChestAPI.Version);
+        hdr.r_size = (ulong) fs.Length;
+        hdr.e_size = (ulong) b.LongLength;
+
+        fs.Position = 0;
+        ChestAPI.Crc.ComputeHash(fs);
+        hdr.r_checksum = ChestAPI.Crc.HashResult;
+        ChestAPI.Crc.ComputeHash(b);
+        hdr.e_checksum = ChestAPI.Crc.HashResult;
+        byte[] temp = hdr.ToArray();
+        ChestAPI.Crc.ComputeHash(temp);
+        hdr.h_checksum = ChestAPI.Crc.HashResult;
+        return hdr;
+    }
     public static TaskResult FromFile(string file, out CHEST_HEADER hdr) {
         hdr = default(CHEST_HEADER);
         FileStream fs;
@@ -86,14 +101,13 @@ struct CHEST_HEADER {
         if (r != TaskResult.Success) return r;
         return FromStream(fs, out hdr);
     }
-
     public static TaskResult FromStream(Stream s, out CHEST_HEADER hdr) {
         hdr = default(CHEST_HEADER);
         BinaryReader br;
         try {
             br = new BinaryReader(s);
         } catch {
-            return TaskResult.StreamError;
+            return TaskResult.InvalidParameter;
         }
 
         hdr.signature = br.ReadUInt16();

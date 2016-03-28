@@ -97,19 +97,24 @@ public enum TaskResult : ushort {
     FileOpenError = 53,
 
     /// <summary>
-    /// 스트림 오류입니다.
+    /// 스트림 읽기 오류입니다.
     /// </summary>
-    StreamError = 54,
+    StreamReadError = 54,
 
+    /// <summary>
+    /// 스트림 쓰기 오류입니다.
+    /// </summary>
+    StreamWriteError = 55,
+    
     /// <summary>
     /// 메모리가 부족합니다.
     /// </summary>
-    OutOfMemory = 55,
+    OutOfMemory = 56,
 
     /// <summary>
     /// 경로가 너무 깁니다.
     /// </summary>
-    PathTooLong = 56,
+    PathTooLong = 57,
 
 
 

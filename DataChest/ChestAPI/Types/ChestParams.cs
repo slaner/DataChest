@@ -16,16 +16,16 @@ sealed class ChestParams {
     ushort g_version;           // Version for CHEST_HEADER.
     Algorithms g_algorithm;     // Algorithm used for Encryption and Decryption.
     bool g_verify;              // Determine uses checksum verify.
-    bool g_convertHash;         // Determine password and IV will pass after calculating hash.
     bool g_ivFromFile;          // True if read IV from file.
     bool g_passwordFromFile;    // True if read Password from file.
     bool g_overwriteFile;       // Determine overwrite existing output file.
+    bool g_runTest;             // True if run the test from input file.
 
 
     public ChestParams() {
         g_version = ChestAPI.Version;
         g_verify = true;
-        g_convertHash = true;
+        g_runTest = false;
         g_iv = "";
         ResetPassword();
     }
@@ -200,15 +200,7 @@ sealed class ChestParams {
         get { return g_overwriteFile; }
         set { g_overwriteFile = value; }
     }
-
-    /// <summary>
-    /// 암호 및 초기 벡터(IV)를 해시로 계산한 후 사용할 것인지에 대한 여부입니다.
-    /// </summary>
-    public bool ConvertToHash {
-        get { return g_convertHash; }
-        set { g_convertHash = value; }
-    }
-
+    
     /// <summary>
     /// 작업에 사용할 알고리즘입니다.
     /// </summary>
@@ -232,16 +224,24 @@ sealed class ChestParams {
     }
 
     /// <summary>
-    /// 암호를 파일로부터 읽어오는지의 여부입니다.
+    /// 암호를 파일로부터 읽어오는지에 대한 여부입니다.
     /// </summary>
     public bool PasswordFromFile {
         get { return g_passwordFromFile; }
     }
 
     /// <summary>
-    /// 초기 벡터(IV)를 파일로부터 읽어오는지의 여부입니다.
+    /// 초기 벡터(IV)를 파일로부터 읽어오는지에 대한 여부입니다.
     /// </summary>
     public bool IVFromFile {
         get { return g_ivFromFile; }
+    }
+
+    /// <summary>
+    /// 출력 파일을 생성하지 않고 암복호화 기능을 검사하는지에 대한 여부입니다.
+    /// </summary>
+    public bool RunTest {
+        get { return g_runTest; }
+        set { g_runTest = value; }
     }
 }
