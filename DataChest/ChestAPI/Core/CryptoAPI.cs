@@ -63,7 +63,7 @@ static class CryptoAPI {
         } catch (IOException) {
             fs.Dispose();
             sa.Dispose();
-            return TaskResult.FileExists;
+            return TaskResult.FileAlreadyExists;
         } catch {
             // Add More specific exception handler here
             bool AddMoreSpecificExceptionHandlerHere;
@@ -97,7 +97,7 @@ static class CryptoAPI {
             }
 
             // 헤더를 생성하고, 바이트 배열로 변환한다. (파일에 쓰기 위해서)
-            CHEST_HEADER hdr = CHEST_HEADER.CreateHeader(fs, result);
+            CHEST_HEADER hdr = CHEST_HEADER.CreateHeader(cp.Version, fs, result);
             byte[] bHdr = hdr.ToArray();
 
             // 파일에 데이터를 쓰기 위해 BinaryWriter 개체를 만든다.
