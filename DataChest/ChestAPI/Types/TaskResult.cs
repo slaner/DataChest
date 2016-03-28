@@ -9,9 +9,9 @@ public enum TaskResult : ushort {
     Success = 0,
 
     /// <summary>
-    /// 파일이 존재합니다.
+    /// 파일이 이미 존재합니다.
     /// </summary>
-    FileExists = 1,
+    FileAlreadyExists = 1,
 
 
     /// <summary>
@@ -34,87 +34,82 @@ public enum TaskResult : ushort {
     /// 유효하지 않은 알고리즘입니다.
     /// </summary>
     InvalidAlgorithm = 40,
-
-    /// <summary>
-    /// 유효하지 않은 키 길이입니다.
-    /// </summary>
-    InvalidKeySize = 41,
-
+    
     /// <summary>
     /// 유효하지 않은 시그니쳐입니다.
     /// </summary>
-    InvalidSignature = 43,
+    InvalidSignature,
 
     /// <summary>
     /// 유효하지 않은 헤더 필드 값입니다.
     /// </summary>
-    InvalidHeaderFieldValue = 44,
+    InvalidHeaderFieldValue,
 
     /// <summary>
     /// 유효하지 않은 헤더입니다.
     /// </summary>
-    InvalidHeader = 45,
+    InvalidHeader,
 
     /// <summary>
     /// 유효하지 않은 매개 변수입니다.
     /// </summary>
-    InvalidParameter = 46,
+    InvalidParameter,
 
     /// <summary>
     /// 유효하지 않은 버전입니다.
     /// </summary>
-    InvalidVersion = 47,
+    InvalidVersion,
 
     /// <summary>
     /// 유효하지 않은 암호입니다.
     /// </summary>
-    InvalidPassword = 48,
+    InvalidPassword,
 
     /// <summary>
     /// 유효하지 않은 초기 벡터(IV)입니다.
     /// </summary>
-    InvalidIV = 49,
+    InvalidIV,
 
 
     /// <summary>
-    /// 알고리즘 개체 초기화에 실패했습니다.
+    /// 알고리즘 초기화에 실패했습니다.
     /// </summary>
     AlgorithmInitiateFailure = 50,
 
     /// <summary>
     /// 입출력 오류입니다.
     /// </summary>
-    IOError = 51,
+    IOError,
 
     /// <summary>
     /// 인코딩 오류입니다.
     /// </summary>
-    EncodingError = 52,
+    EncodingError,
 
     /// <summary>
     /// 파일 열기 오류입니다.
     /// </summary>
-    FileOpenError = 53,
+    FileOpenError,
 
     /// <summary>
     /// 스트림 읽기 오류입니다.
     /// </summary>
-    StreamReadError = 54,
+    StreamReadError,
 
     /// <summary>
     /// 스트림 쓰기 오류입니다.
     /// </summary>
-    StreamWriteError = 55,
+    StreamWriteError,
     
     /// <summary>
     /// 메모리가 부족합니다.
     /// </summary>
-    OutOfMemory = 56,
+    OutOfMemory,
 
     /// <summary>
     /// 경로가 너무 깁니다.
     /// </summary>
-    PathTooLong = 57,
+    PathTooLong,
 
 
 
@@ -126,18 +121,23 @@ public enum TaskResult : ushort {
     /// <summary>
     /// 디렉터리를 찾을 수 없습니다.
     /// </summary>
-    DirectoryNotFound = 61,
+    DirectoryNotFound,
 
     /// <summary>
     /// 접근이 거부되었습니다.
     /// </summary>
-    AccessDenied = 62,
+    AccessDenied,
 
 
     /// <summary>
     /// 지원되지 않는 버전입니다.
     /// </summary>
     NotSupportedVersion = 70,
+
+    /// <summary>
+    /// 모호한 옵션입니다.
+    /// </summary>
+    AmbiguousOption = 71,
 
 
     /// <summary>
