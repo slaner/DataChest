@@ -79,8 +79,8 @@ struct CHEST_HEADER {
     public ulong r_size;
 
 
-    public static CHEST_HEADER CreateHeader(FileStream fs, byte[] b) {
-        CHEST_HEADER hdr = new CHEST_HEADER(ChestAPI.Version);
+    public static CHEST_HEADER CreateHeader(ushort version, FileStream fs, byte[] b) {
+        CHEST_HEADER hdr = new CHEST_HEADER(version);
         hdr.r_size = (ulong) fs.Length;
         hdr.e_size = (ulong) b.LongLength;
 
