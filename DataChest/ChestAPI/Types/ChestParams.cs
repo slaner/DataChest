@@ -5,9 +5,9 @@ using System.IO;
 /// ChestAPI 호출에 필요한 정보를 저장하는 클래스입니다.
 /// </summary>
 sealed class ChestParams {
-    // Password and IV parsing
-    // K for Key (Plain-text)
-    // F for File (Read from file)
+    const string PhraseFileLookupPrefix = "FF:";
+    const string PhrasePlainTextPrefix = "FT:";
+
 
     string g_password;          // Password for file
     string g_output;            // Output filename (To be created)
@@ -20,12 +20,14 @@ sealed class ChestParams {
     bool g_passwordFromFile;    // True if read Password from file.
     bool g_overwriteFile;       // Determine overwrite existing output file.
     bool g_runTest;             // True if run the test from input file.
+    bool g_encrypt;             // Determine do encrypt or decrypt.
 
 
     public ChestParams() {
         g_version = ChestAPI.Version;
         g_verify = true;
         g_runTest = false;
+        g_encrypt = true;
         g_iv = "";
         ResetPassword();
     }
@@ -36,8 +38,8 @@ sealed class ChestParams {
     /// </summary>
     public void ResetPassword() {
         // Basic password combination
-        // K:USERNAME@MACHINENAME
-        g_password = "K:" + Environment.UserName + "@" + Environment.MachineName;
+        // PhrasePlainTextPrefix + USERNAME + "@" + MACHINENAME
+        g_password = PhrasePlainTextPrefix + Environment.UserName + "@" + Environment.MachineName;
         g_passwordFromFile = false;
     }
 
@@ -45,18 +47,44 @@ sealed class ChestParams {
     /// 암호를 설정합니다. 암호가 null일 경우 암호를 기본 값으로 되돌립니다.
     /// </summary>
     /// <param name="value">암호입니다.</param>
-    /// <param name="fromFile">파일 경로일 경우 true를 입력합니다.</param>
-    public void SetPassword(string value, bool fromFile) {
+    public void SetPassword(string value) {
         if (string.IsNullOrEmpty(value)) {
             ResetPassword();
             return;
         }
 
-        g_passwordFromFile = fromFile;
-        if (fromFile)
-            g_password = "F:" + value;
-        else
-            g_password = "K:" + value;
+        // PhraseFileLookupPrefix로 시작하는 경우 (파일 찾기)
+        if (value.StartsWith(PhraseFileLookupPrefix)) {
+            // 길이가 2인 경우 (파일 경로가 명시되지 않음)
+            if ( value.Length == 2) {
+                ResetPassword();
+                return;
+            }
+
+            string path = value.Substring(2);
+            if(File.Exists(path)) {
+                g_password = PhraseFileLookupPrefix + path;
+                g_passwordFromFile = true;
+            } else {
+                g_password = PhrasePlainTextPrefix + value;
+                g_passwordFromFile = false;
+            }
+        }
+        // PhrasePlainTextPrefix로 시작하는 경우 (문자열 그 자체)
+        else if (value.StartsWith(PhrasePlainTextPrefix)) {
+            g_password = value;
+            g_passwordFromFile = false;
+        }
+        // 자동 검사
+        else {
+            if (File.Exists(value)) {
+                g_password = PhraseFileLookupPrefix + value;
+                g_passwordFromFile = true;
+            } else {
+                g_password = PhrasePlainTextPrefix + value;
+                g_passwordFromFile = false;
+            }
+        }
     }
 
     /// <summary>
@@ -71,44 +99,46 @@ sealed class ChestParams {
     /// 초기 벡터를 설정합니다.
     /// </summary>
     /// <param name="value">초기 벡터입니다.</param>
-    /// <param name="fromFile">파일 경로일 경우 true를 입력합니다.</param>
-    public void SetIV(string value, bool fromFile) {
+    public void SetIV(string value) {
         if (string.IsNullOrEmpty(value)) {
             ResetIV();
             return;
         }
 
-        g_ivFromFile = fromFile;
-        if (fromFile)
-            g_iv = "F:" + value;
-        else
-            g_iv = "K:" + value;
+        // PhraseFileLookupPrefix로 시작하는 경우 (파일 찾기)
+        if (value.StartsWith(PhraseFileLookupPrefix)) {
+            // 길이가 2인 경우 (파일 경로가 명시되지 않음)
+            if (value.Length == 2) {
+                ResetIV();
+                return;
+            }
+
+            string path = value.Substring(2);
+            if (File.Exists(path)) {
+                g_iv = PhraseFileLookupPrefix + path;
+                g_ivFromFile = true;
+            } else {
+                g_iv = PhrasePlainTextPrefix + value;
+                g_ivFromFile = false;
+            }
+        }
+        // PhrasePlainTextPrefix로 시작하는 경우 (문자열 그 자체)
+        else if (value.StartsWith(PhrasePlainTextPrefix)) {
+            g_iv = value;
+            g_ivFromFile = false;
+        }
+        // 자동 검사
+        else {
+            if (File.Exists(value)) {
+                g_iv = PhraseFileLookupPrefix + value;
+                g_ivFromFile = true;
+            } else {
+                g_iv = PhrasePlainTextPrefix + value;
+                g_ivFromFile = false;
+            }
+        }
     }
-
-    /// <summary>
-    /// IV를 검증합니다.
-    /// </summary>
-    internal bool VerifyIV() {
-        if (string.IsNullOrEmpty(g_iv)) return true;
-
-        if (g_iv.StartsWith("F:"))
-            return File.Exists(g_iv.Substring(2));
-        else if (g_iv.StartsWith("K:"))
-            return true;
-        return false;
-    }
-
-    /// <summary>
-    /// 암호를 검증합니다.
-    /// </summary>
-    internal bool VerifyPassword() {
-        if (g_password.StartsWith("F:"))
-            return File.Exists(g_password.Substring(2));
-        else if (g_password.StartsWith("K:"))
-            return true;
-        return false;
-    }
-
+    
     /// <summary>
     /// 암호 데이터에 대한 스트림을 가져옵니다.
     /// </summary>
@@ -116,17 +146,14 @@ sealed class ChestParams {
     internal TaskResult GetPasswordDataStream(out Stream s) {
         s = null;
         if (g_passwordFromFile) {
-            try {
-                s = File.OpenRead(g_password.Substring(2));
-                return TaskResult.Success;
-            } catch (UnauthorizedAccessException uae) {
-                return TaskResult.AccessDenied;
-            } catch {
-                return TaskResult.IOError;
-            }
+            FileStream fs;
+            TaskResult r = FileHelper.OpenFileStream(g_password.Substring(PhraseFileLookupPrefix.Length), out fs);
+            if (r != TaskResult.Success) return r;
+            s = fs;
+            return TaskResult.Success;
         } else {
             try {
-                byte[] b = ChestAPI.SystemUnicodeEncoding.GetBytes(g_password.Substring(2));
+                byte[] b = ChestAPI.SystemUnicodeEncoding.GetBytes(g_password.Substring(PhraseFileLookupPrefix.Length));
                 s = new MemoryStream(b);
                 return TaskResult.Success;
             } catch (System.Text.EncoderFallbackException efe) {
@@ -145,13 +172,13 @@ sealed class ChestParams {
 
         if (g_ivFromFile) {
             FileStream fs;
-            TaskResult r = FileHelper.OpenFileStream(g_iv.Substring(2), out fs);
+            TaskResult r = FileHelper.OpenFileStream(g_iv.Substring(PhrasePlainTextPrefix.Length), out fs);
             if (r != TaskResult.Success) return r;
             s = fs;
             return TaskResult.Success;
         } else {
             try {
-                byte[] b = ChestAPI.SystemUnicodeEncoding.GetBytes(g_iv.Substring(2));
+                byte[] b = ChestAPI.SystemUnicodeEncoding.GetBytes(g_iv.Substring(PhrasePlainTextPrefix.Length));
                 s = new MemoryStream(b);
                 return TaskResult.Success;
             } catch (System.Text.EncoderFallbackException efe) {
@@ -243,5 +270,13 @@ sealed class ChestParams {
     public bool RunTest {
         get { return g_runTest; }
         set { g_runTest = value; }
+    }
+
+    /// <summary>
+    /// 파일을 암호화할 것인지 복호화할 것인지에 대한 여부입니다.
+    /// </summary>
+    public bool Encrypt {
+        get { return g_encrypt; }
+        set { g_encrypt = value; }
     }
 }
