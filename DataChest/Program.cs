@@ -21,13 +21,14 @@ class Program {
 
     static int Main(string[] args) {
         var opt = new ChestAPIOptions();
+        TaskResult r;
         if (args.Length == 0) {
             Console.Write(opt.GetUsage());
             return (int) TaskResult.Success;
         } else {
             // 실패하거나 도움말을 표시하는 경우, 기본 종료 코드로 종료한다.
             if (!Parser.Default.ParseArguments(args, opt))
-                return (int) TaskResult.InvalidParameter;
+                return SetError(TaskResult.InvalidParameter);
 
             // 알고리즘 목록 표시
             if (opt.ShowAlgorithmList)
@@ -40,14 +41,14 @@ class Program {
             // 독립적인 명령어 끝
             // 입력 파일이 없는 경우
             if (opt.In.Count == 0)
-                return SetError(TaskResult.NoInputFiles, "입력 파일이 없습니다.");
+                return SetError(TaskResult.NoInputFiles);
 
             // 헤더 정보 표시
             if(opt.ShowHeaderInfo) {
                 CHEST_HEADER hdr;
-                TaskResult r = CHEST_HEADER.FromFile(opt.In[0], out hdr);
-                if ( r!= TaskResult.Success) 
-                    return SetError(r, "헤더 정보를 가져올 수 없습니다.");
+                r = CHEST_HEADER.FromFile(opt.In[0], out hdr);
+                if (r != TaskResult.Success)
+                    return SetError(r);
                 
                 Console.WriteLine("CHEST_HEADER information");
                 Console.WriteLine("File                   : " + opt.In[0]);
@@ -60,12 +61,34 @@ class Program {
                 return (int) TaskResult.Success;
             }
 
-            //how to get unbound options ?;
-            // Successful
-            opt.ToString();
-        }
+            // 알고리즘 검사
+            if (opt.Algorithm >= Algorithms.LastMethod)
+                return SetError(TaskResult.InvalidAlgorithm);
 
-        return (int)TaskResult.Success;
+            // API 버전이 설정되지 않은 경우 ChestAPI.Version 으로 설정한다.
+            if (opt.APIVersion == 0)
+                opt.APIVersion = ChestAPI.Version;
+            else {
+                // 지원하는 버전보다 높은 버전일 경우
+                if (opt.APIVersion > ChestAPI.Version)
+                    return SetError(TaskResult.NotSupportedVersion);
+            }
+            
+            ChestParams cp = new ChestParams();
+            cp.Overwrite = opt.Overwrite;
+            cp.Algorithm = opt.Algorithm;
+            cp.Encrypt = !opt.Decrypt;
+            cp.Verify = !opt.DisableVerification;
+            cp.OutputFile = opt.Out;
+            cp.RunTest = opt.RunTest;
+            cp.Version = opt.APIVersion;
+            cp.SetIV(opt.IV);
+            cp.SetPassword(opt.Password);
+            cp.InputFile = opt.In[0];
+
+            r = ChestAPI.Invoke(cp);
+            return SetError(r);
+        }
     }
         
     static int ShowVersionInfo() {
@@ -77,11 +100,14 @@ class Program {
         Console.WriteLine("사용 가능한 알고리즘 목록:");
         string[] algorithms = Enum.GetNames(typeof(Algorithms));
         for (int i = 0; i < algorithms.Length - 1; i++)
-            Console.WriteLine("  " + algorithms[i]);
+            Console.WriteLine("  " + i + " " + algorithms[i]);
 
         return (int)TaskResult.Success;
     }
-    
+
+    static int SetError(TaskResult result) {
+        return SetError(result, ErrorFormatter.GetErrorMessageFromTaskResult(result));
+    }
     static int SetError(TaskResult result, string message) {
         Console.WriteLine("오류 코드: " + result + " (0x{0:X4})", (int) result);
         Console.WriteLine("오류 내용: " + message);
