@@ -5,7 +5,7 @@ using CommandLine.Text;
 
 class ChestAPIOptions {
     [Option('a', "algorithm", HelpText = "사용할 알고리즘을 설정합니다.", Required = false, MetaValue = "<alg>")]
-    public string Algorithm { get; set; }
+    public Algorithms Algorithm { get; set; }
 
     [Option('A', "listalg", HelpText = "사용할 수 있는 알고리즘 목록을 표시합니다.", Required = false)]
     public bool ShowAlgorithmList { get; set; }
@@ -18,10 +18,7 @@ class ChestAPIOptions {
 
     [Option('D', "disableverify", HelpText = "체크섬 검증을 비활성화합니다.", Required = false)]
     public bool DisableVerification { get; set; }
-
-    [Option('e', "encrypt", HelpText = "파일을 암호화합니다. 암호화된 파일에 이 옵션을 사용하면 이중으로 암호화됩니다.", Required = false)]
-    public bool Encrypt { get; set; }
-
+    
     [Option('i', "infoheader", HelpText = "* 파일의 CHEST_HEADER 정보를 표시합니다.", Required = false)]
     public bool ShowHeaderInfo { get; set; }
 
