@@ -6,11 +6,11 @@ using System.Runtime.InteropServices;
 // 제어됩니다. 어셈블리와 관련된 정보를 수정하려면
 // 이러한 특성 값을 변경하세요.
 [assembly: AssemblyTitle("DataChest")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("Data Chest Application. Provide File Encryption and Decryption.")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("TeamDEV Korea")]
 [assembly: AssemblyProduct("DataChest")]
-[assembly: AssemblyCopyright("Copyright ©  2016")]
+[assembly: AssemblyCopyright("TeamDEV Korea, 2016.")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
