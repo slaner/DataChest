@@ -84,7 +84,7 @@ class ChestAPIOptions {
 #endif
             );
         CopyrightInfo copyright = new CopyrightInfo(
-            "SlaneR of TeamDEV Korea"
+            "HYE WON, HWANG"
 #if PROJECT_MODIFIED
                 + " and Modified by " + Program.Modifier
 #endif
