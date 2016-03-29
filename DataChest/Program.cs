@@ -34,6 +34,7 @@
 using System;
 using System.Reflection;
 using CommandLine;
+using CommandLine.Text;
 
 class Program {
     internal static readonly string Modifier = "USER";
@@ -117,7 +118,33 @@ class Program {
     }
         
     static int ShowVersionInfo() {
-        Console.WriteLine("CommandLine - MIT License");
+        HeadingInfo header = new HeadingInfo(
+            "Data Chest",
+            Program.AssemblyVersion
+#if ADT_VERSION_NOTIFY
+                + "-" + Program.AdtVersion
+#endif
+            );
+        CopyrightInfo copyright = new CopyrightInfo(
+            "HYE WON, HWANG"
+#if PROJECT_MODIFIED
+                + " and Modified by " + Program.Modifier
+#endif
+                + ".", 2016
+        );
+        Console.WriteLine("프로그램 정보:");
+        Console.WriteLine("  " + header);
+        Console.WriteLine("  " + copyright);
+        Console.WriteLine();
+        Console.WriteLine("라이센스 정보:");
+        Console.WriteLine("  MIT License");
+        Console.WriteLine();
+        Console.WriteLine("사용 라이브러리:");
+        Console.WriteLine("  CommandLine");
+        Console.WriteLine("  + Author  : gsscoder");
+        Console.WriteLine("  + Homepage: https://commandline.codeplex.com");
+        Console.WriteLine("  + License : MIT License");
+
         return (int) TaskResult.Success;
     }
 
