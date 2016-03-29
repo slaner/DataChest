@@ -39,3 +39,47 @@ HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
 WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
+
+Options
+=
+`-a <alg>, --algorithm=<alg>`
+>Specify algorithm that used in encryption and decryption process. Default is 'Aes'
+
+`-A, --listalg`
+>Show list of algorithms can be used.
+
+`-c, --cleanup`
+>Delete input file when task succeed.
+
+`-d, --decrypt`
+>Decrypt a encrypted file.
+
+`-D, --disableverify`
+>Disable checksum(crc) verification.
+
+`-i, --infoheader`
+>Display CHEST_HEADER information of encrypted file.
+
+`-I <iv>, --iv=<iv>`
+>Sets Initial Vector(IV) that used in encryption and decryption process.
+
+`-o <out>, --out=<out>`
+>Sets output file.
+
+`-v, --version`
+>Display version and license information.
+
+`-V <ver>, --apiversion=<ver>`
+>Sets ChestAPI version.
+
+`-t, --test`
+>Run the test. This option will not generate output file.
+
+`-W, --overwrite`
+>If output file already exists, will overwrite exist file.
+
+`-p <pw>, --password=<pw>`
+>Sets Password.
+
+`-?`
+>Display usage.
