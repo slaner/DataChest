@@ -1,5 +1,0 @@
-C:\Users\hWang\Desktop\Solutions\Remake\DataChest\DataChest\obj\Debug\DataChest.csprojResolveAssemblyReference.cache
-C:\Users\hWang\Desktop\Solutions\Remake\DataChest\DataChest\bin\Debug\DataChest.exe
-C:\Users\hWang\Desktop\Solutions\Remake\DataChest\DataChest\bin\Debug\DataChest.pdb
-C:\Users\hWang\Desktop\Solutions\Remake\DataChest\DataChest\obj\Debug\DataChest.exe
-C:\Users\hWang\Desktop\Solutions\Remake\DataChest\DataChest\obj\Debug\DataChest.pdb
