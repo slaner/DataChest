@@ -25,7 +25,7 @@
 
 // 추가 버전을 공지하려면 아래 주석을 제거하세요
 // 연관 변수: Program.AdtVersion
-// #define ADT_VERSION_NOTIFY
+#define ADT_VERSION_NOTIFY
 
 // 원본 프로젝트를 수정하여 컴파일하는 경우 아래 주석을 제거하세요
 // 연관 변수: Program.Modifier
@@ -38,7 +38,7 @@ using CommandLine.Text;
 
 class Program {
     internal static readonly string Modifier = "USER";
-    internal static readonly string AdtVersion = "development";
+    internal static readonly string AdtVersion = "alpha-development";
     internal static readonly string AssemblyVersion;
     static Program() {
         AssemblyVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString();
@@ -99,8 +99,17 @@ class Program {
                 if (opt.APIVersion > ChestAPI.Version)
                     return SetError(TaskResult.NotSupportedVersion);
             }
-            
+
+            // 테스트 옵션이 켜진 경우
+            if (opt.RunTest) {
+                // 정리 옵션도 켜진 경우
+                // 두 옵션은 같이 사용될 수 없다.
+                if (opt.Cleanup)
+                    return SetError(TaskResult.AmbiguousOption, "-t 옵션과 -c 옵션은 같이 사용될 수 없습니다.");
+            }
+
             ChestParams cp = new ChestParams();
+            cp.Cleanup = opt.Cleanup;
             cp.Overwrite = opt.Overwrite;
             cp.Algorithm = opt.Algorithm;
             cp.Encrypt = !opt.Decrypt;

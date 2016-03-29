@@ -37,6 +37,10 @@ public enum TaskResult : ushort {
     /// </summary>
     FileAlreadyExists = 1,
 
+    /// <summary>
+    /// 작업이 성공했지만 정리에 실패했습니다.
+    /// </summary>
+    CleanupFailedSucceed = 2,
 
     /// <summary>
     /// 데이터가 없습니다.

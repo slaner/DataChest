@@ -46,6 +46,7 @@ sealed class ChestParams {
     bool g_overwriteFile;       // Determine overwrite existing output file.
     bool g_runTest;             // True if run the test from input file.
     bool g_encrypt;             // Determine do encrypt or decrypt.
+    bool g_cleanup;
 
 
     public ChestParams() {
@@ -53,6 +54,7 @@ sealed class ChestParams {
         g_verify = true;
         g_runTest = false;
         g_encrypt = true;
+        g_cleanup = false;
         g_iv = "";
         ResetPassword();
     }
@@ -304,4 +306,12 @@ sealed class ChestParams {
         get { return g_encrypt; }
         set { g_encrypt = value; }
     }
+    /// <summary>
+    /// 작업이 성공한 경우, 입력 파일을 정리할 것인지에 대한 여부입니다.
+    /// </summary>
+    public bool Cleanup {
+        get { return g_cleanup; }
+        set { g_cleanup = value; }
+    }
+
 }

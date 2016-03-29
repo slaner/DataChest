@@ -153,6 +153,16 @@ static class CryptoAPI {
                 return TaskResult.StreamWriteError;
             }
 
+            // 정리 옵션이 켜진 경우
+            if (cp.Cleanup) {
+                try {
+                    File.Delete(cp.InputFile);
+                } catch {
+                    sa.Dispose();
+                    fs.Dispose();
+                    return TaskResult.CleanupFailedSucceed;
+                }
+            }
         } else {
 
             // 파일로부터 헤더를 구성한다.
@@ -206,6 +216,17 @@ static class CryptoAPI {
                 sa.Dispose();
                 fs.Dispose();
                 return TaskResult.StreamWriteError;
+            }
+
+            // 정리 옵션이 켜진 경우
+            if (cp.Cleanup) {
+                try {
+                    File.Delete(cp.InputFile);
+                } catch {
+                    sa.Dispose();
+                    fs.Dispose();
+                    return TaskResult.CleanupFailedSucceed;
+                }
             }
         }
         
