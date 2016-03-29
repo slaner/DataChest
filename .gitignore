@@ -1,4 +1,10 @@
 # Ignore visual studio solution user option(suo) file
 *.suo
+
+# Ignore executable and pdb files
 *.exe
 *.pdb
+
+# Ignore all output / object files
+DataChest/bin
+DataChest/obj
