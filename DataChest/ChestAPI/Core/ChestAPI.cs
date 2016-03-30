@@ -39,10 +39,7 @@ static class ChestAPI {
     /// ChestAPI 버전을 나타냅니다.
     /// </summary>
     public static ushort Version = 1;
-    /// <summary>
-    /// CRC-32 해시 계산에 사용되는 CRC32 개체를 나타냅니다.
-    /// </summary>
-    public static Crc32 Crc = new Crc32();
+    static SHA256 SHA = SHA256.Create();
 
 
     /// <summary>
@@ -58,6 +55,24 @@ static class ChestAPI {
 
         // 호출!
         return CryptoAPI.Invoke(cp, cp.Encrypt);
+    }
+
+    /// <summary>
+    /// 스트림에 대한 해시를 계산합니다.
+    /// </summary>
+    /// <param name="s">해시를 계산할 스트림입니다.</param>
+    public static uint ComputeHash(Stream s) {
+        byte[] r = SHA.ComputeHash(s);
+        return BitConverter.ToUInt32(r, 0);
+    }
+
+    /// <summary>
+    /// 바이트 배열에 대한 해시를 계산합니다.
+    /// </summary>
+    /// <param name="buffer">해시를 계산할 바이트 배열입니다.</param>
+    public static uint ComputeHash(byte[] buffer) {
+        byte[] r = SHA.ComputeHash(buffer);
+        return BitConverter.ToUInt32(r, 0);
     }
     
     static TaskResult VerifyParameters(ChestParams cp) {
