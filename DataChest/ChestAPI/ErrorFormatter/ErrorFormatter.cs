@@ -61,6 +61,8 @@ static class ErrorFormatter {
         {71, "모호한 옵션입니다."},
 
         {80, "헤더 체크섬이 올바르지 않습니다."},
+        {81, "원본 데이터의 체크섬이 올바르지 않습니다."},
+        {82, "암호화된 데이터의 체크섬이 올바르지 않습니다."},
     };
 
     public static string GetErrorMessageFromTaskResult(TaskResult r) {

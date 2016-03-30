@@ -172,4 +172,14 @@ public enum TaskResult : ushort {
     /// 헤더 체크섬이 올바르지 않습니다.
     /// </summary>
     IncorrectHeaderChecksum = 80,
+
+    /// <summary>
+    /// 원본 데이터의 체크섬이 올바르지 않습니다.
+    /// </summary>
+    IncorrectRawDataChecksum,
+
+    /// <summary>
+    /// 암호화된 데이터의 체크섬이 올바르지 않습니다.
+    /// </summary>
+    IncorrectEncryptedDataChecksum,
 }
