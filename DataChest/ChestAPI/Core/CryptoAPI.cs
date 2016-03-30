@@ -108,11 +108,15 @@ static class CryptoAPI {
 
             // 오류가 발생한 경우 오류를 리턴한다.
             if (r != TaskResult.Success) {
+                if (ofs != null) {
+                    ofs.Dispose();
+                    File.Delete(output);
+                }
                 fs.Dispose();
                 sa.Dispose();
                 return r;
             }
-
+            
             // 검사를 수행하는 경우
             if ( cp.RunTest ) {
                 // 암호화가 성공적으로 수행됬으므로 Success 를 반환한다.
@@ -148,6 +152,7 @@ static class CryptoAPI {
 
             // 스트림 기록 중 오류가 발생한 경우
             if ( error ) {
+                File.Delete(output);
                 sa.Dispose();
                 fs.Dispose();
                 return TaskResult.StreamWriteError;
@@ -171,9 +176,55 @@ static class CryptoAPI {
 
             // 실패!
             if (r != TaskResult.Success) {
+                if (ofs != null) {
+                    ofs.Dispose();
+                    File.Delete(output);
+                }
                 fs.Dispose();
                 sa.Dispose();
                 return r;
+            }
+
+            // 체크섬은 두번 검사한다.
+            // 처음 검사는 암호화된 데이터 검사
+            // 두번째 검사는 복호화된 데이터 검사
+            if(cp.Verify) {
+                long nPrevPos = fs.Position;
+                if (ChestAPI.ComputeHash(fs) != hdr.e_checksum) {
+                    if (ofs != null) {
+                        ofs.Dispose();
+                        File.Delete(output);
+                    }
+                    fs.Dispose();
+                    sa.Dispose();
+                    return TaskResult.IncorrectEncryptedDataChecksum;
+                }
+                fs.Position = nPrevPos;
+            }
+
+            // 실질적인 복호화는 Decrypt 함수 내에서 수행된다.
+            r = Decrypt(fs, sa, out result);
+            if (r != TaskResult.Success) {
+                if (ofs != null) {
+                    ofs.Dispose();
+                    File.Delete(output);
+                }
+                fs.Dispose();
+                sa.Dispose();
+                return r;
+            }
+
+            // 체크섬 검증
+            if ( cp.Verify ) {
+                if(ChestAPI.ComputeHash(result) != hdr.r_checksum) {
+                    if (ofs != null) {
+                        ofs.Dispose();
+                        File.Delete(output);
+                    }
+                    fs.Dispose();
+                    sa.Dispose();
+                    return TaskResult.IncorrectRawDataChecksum;
+                }
             }
 
             // 검사를 수행하는 경우
@@ -183,15 +234,7 @@ static class CryptoAPI {
                 sa.Dispose();
                 return TaskResult.Success;
             }
-
-            // 실질적인 복호화는 Decrypt 함수 내에서 수행된다.
-            r = Decrypt(fs, sa, out result);
-            if (r != TaskResult.Success) {
-                fs.Dispose();
-                sa.Dispose();
-                return r;
-            }
-
+            
             // 파일에 데이터를 쓰기 위해 BinaryWriter 개체를 만든다.
             // 여기서 쓰는 데이터는 복호화된 데이터가 쓰여지게 된다.
             using (BinaryWriter bw = new BinaryWriter(ofs)) {
@@ -213,6 +256,7 @@ static class CryptoAPI {
 
             // 스트림 기록 중 오류가 발생한 경우
             if (error) {
+                File.Delete(output);
                 sa.Dispose();
                 fs.Dispose();
                 return TaskResult.StreamWriteError;
