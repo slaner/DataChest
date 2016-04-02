@@ -9,7 +9,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyDescription("Data Chest Application. Provide File Encryption and Decryption.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("TeamDEV Korea")]
-[assembly: AssemblyProduct("DataChest")]
+[assembly: AssemblyProduct("dc")]
 [assembly: AssemblyCopyright("TeamDEV Korea, 2016.")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]

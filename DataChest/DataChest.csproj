@@ -8,7 +8,7 @@
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>DataChest</RootNamespace>
-    <AssemblyName>DataChest</AssemblyName>
+    <AssemblyName>dc</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -98,7 +98,6 @@
     <Compile Include="CommandLine\Text\HeadingInfo.cs" />
     <Compile Include="CommandLine\Text\HelpText.cs" />
     <Compile Include="CommandLine\Text\_ParsingErrorsHandler.cs" />
-    <Compile Include="CRC\Crc32.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
