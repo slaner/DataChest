@@ -26,6 +26,7 @@
 using System;
 using System.IO;
 using System.Security.Cryptography;
+using System.Reflection;
 
 /// <summary>
 /// 암호화 및 복호화하는 함수가 정의되어 있는 클래스입니다.
@@ -38,12 +39,15 @@ static class CryptoAPI {
 
     /// <summary>
     /// IV가 지정되지 않은 경우에 기본 값으로 사용되는 값입니다.
+    /// 이 DefaultIV 바이트 배열은 "DataChest v0.1-alpha Default IV Seed" 라는 내용을 가진 파일(바이너리 편집기로 작성됨)을
+    /// "DataChest v0.1-alpha Seed for Password" 라는 문자열로 암호화한 후 암호화된 내용의 상위 32바이트입니다.
+    /// 이 때 사용된 IV는 0으로 채워진 바이트 배열이 사용되었습니다.
     /// </summary>
     public static readonly byte[] DefaultIV = {
-        0x45, 0xFC, 0x50, 0x57, 0x57, 0x6A, 0x03, 0x8D,
-        0x45, 0xEC, 0x50, 0xFF, 0x75, 0x08, 0xC7, 0x45,
-        0xEC, 0x01, 0x00, 0x00, 0x00, 0x57, 0x89, 0x7D,
-        0xF0, 0xFF, 0xD6, 0x8B, 0xD8, 0x81, 0xFB, 0x23
+        0xBF, 0x67, 0x8B, 0x27, 0xDC, 0xDE, 0x98, 0xB9,
+        0xDD, 0x44, 0x77, 0x13, 0x85, 0x08, 0xB5, 0x58,
+        0x20, 0x58, 0xE6, 0x6F, 0x5E, 0x0F, 0x66, 0x90,
+        0x3E, 0x9E, 0x11, 0xB3, 0xC1, 0x04, 0x11, 0x2E,
     };
     
     
@@ -278,12 +282,13 @@ static class CryptoAPI {
         fs.Dispose();
         return TaskResult.Success;
     }
-
-    static byte[] GetCompatibleHashForSize(Stream s, int size) {
+    
+    static byte[] ComputeStreamHash(Stream s, int size) {
         SHA256 hasher = SHA256.Create();
         byte[] hash = hasher.ComputeHash(s);
         byte[] result = new byte[size];
         Array.Copy(hash, result, size);
+        hasher.Dispose();
         return result;
     }
     static SymmetricAlgorithm CreateAlgorithm(Algorithms alg, out int keySize) {
@@ -319,64 +324,106 @@ static class CryptoAPI {
             try {
                 temp = new byte[BufferSize];
             } catch {
-                cs.Dispose();
                 return TaskResult.OutOfMemory;
             }
             int nRead;
             try {
                 nRead = s.Read(temp, 0, BufferSize);
+            } catch (CryptographicException ce) {
+                SafeDisposeCryptoStream(cs);
+                return TaskResult.InvalidKeyOrDataIsCorrupted;
             } catch {
-                cs.Dispose();
+                SafeDisposeCryptoStream(cs);
                 return TaskResult.StreamReadError;
             }
             while (nRead > 0) {
                 try {
                     cs.Write(temp, 0, nRead);
                     nRead = s.Read(temp, 0, BufferSize);
+                } catch (CryptographicException ce) {
+                    SafeDisposeCryptoStream(cs);
+                    return TaskResult.InvalidKeyOrDataIsCorrupted;
                 } catch {
-                    cs.Dispose();
+                    SafeDisposeCryptoStream(cs);
                     return TaskResult.StreamReadError;
                 }
             }
         }
 
+        trans.Dispose();
         result = ms.ToArray();
         return TaskResult.Success;
     }
     static TaskResult Decrypt(Stream s, SymmetricAlgorithm sa, out byte[] result) {
         result = null;
         MemoryStream ms = new MemoryStream();
-
+        
         ICryptoTransform trans = sa.CreateDecryptor();
         using (CryptoStream cs = new CryptoStream(s, trans, CryptoStreamMode.Read)) {
             byte[] temp;
             try {
                 temp = new byte[BufferSize];
             } catch {
-                cs.Dispose();
+                ms.Dispose();
                 return TaskResult.OutOfMemory;
             }
+
             int nRead;
             try {
                 nRead = cs.Read(temp, 0, BufferSize);
-            } catch {
-                cs.Dispose();
+            } catch (CryptographicException ce) {
+                // 대부분 패딩이 잘못되었다는 예외가 발생한다.
+                // 이 예외는 주로 암호가 잘못되었을 때 발생된다.
+                // 데이터가 손상된 경우에도 발생할 수 있음.
+                SafeDisposeCryptoStream(cs);
+                ms.Dispose();
+                return TaskResult.InvalidKeyOrDataIsCorrupted;
+            }
+            // 기타 다른 예외가 발생한 경우
+            catch {
+                SafeDisposeCryptoStream(cs);
+                ms.Dispose();
                 return TaskResult.StreamReadError;
             }
             while (nRead > 0) {
                 try {
                     ms.Write(temp, 0, nRead);
                     nRead = cs.Read(temp, 0, BufferSize);
-                } catch {
-                    cs.Dispose();
+                } catch (CryptographicException ce) {
+                    SafeDisposeCryptoStream(cs);
+                    ms.Dispose();
+                    return TaskResult.InvalidKeyOrDataIsCorrupted;
+                }
+                catch {
+                    SafeDisposeCryptoStream(cs);
+                    ms.Dispose();
                     return TaskResult.StreamReadError;
                 }
             }
         }
 
         result = ms.ToArray();
+        trans.Dispose();
         ms.Dispose();
         return TaskResult.Success;
+    }
+    static void SafeDisposeCryptoStream(CryptoStream cs) {
+        try {
+            cs.Dispose();
+        }
+
+        // 이 예외가 발생하는 원인 (2가지)
+        // 1. 키가 손상되어 스트림에 대한 잘못된 패딩이 발생할 수 있는 경우
+        // 2. 현재 스트림에 쓸 수 없는 경우- 또는 - 최종 블록이 이미 변환된 경우
+        catch (CryptographicException ce) {
+            // 대부분 1번의 경우이므로 CryptoStream 내부 변수를 조작하여 Dispose를 호출한다.
+            Type tcs = typeof(CryptoStream);
+            FieldInfo fFBT = tcs.GetField("_finalBlockTransformed", BindingFlags.NonPublic | BindingFlags.Instance);
+            fFBT.SetValue(cs, true);
+
+            // 값을 설정했으니 다시 Dispose를 호출한다.
+            cs.Dispose();
+        }
     }
     static TaskResult PrepareAlgorithm(ChestParams cp, out SymmetricAlgorithm sa) {
         int keySize;
@@ -394,16 +441,15 @@ static class CryptoAPI {
         r = cp.GetIVDataStream(out iv);
         if (r == TaskResult.NoIV) skipIV = true;
         else if (r != TaskResult.Success) return r;
-
-        // 해시로 변형한 후 키로 사용하는 경우:
+        
         byte[] bpw, biv = null;
         int ks = sa.KeySize / 8;
 
-        bpw = GetCompatibleHashForSize(pw, ks);
+        bpw = ComputeStreamHash(pw, ks);
         pw.Dispose();
         sa.Key = bpw;
         if (!skipIV) {
-            biv = GetCompatibleHashForSize(iv, ks);
+            biv = ComputeStreamHash(iv, ks);
             iv.Dispose();
         } else {
             biv = new byte[sa.IV.Length];
@@ -413,5 +459,4 @@ static class CryptoAPI {
 
         return TaskResult.Success;
     }
-
 }
