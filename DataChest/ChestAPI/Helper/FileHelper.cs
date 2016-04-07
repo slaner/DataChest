@@ -31,25 +31,25 @@ static class FileHelper {
         fs = null;
         try {
             fs = File.OpenRead(fileName);
-        } catch (FileNotFoundException fnfe) {
+        } catch (FileNotFoundException) {
             return TaskResult.FileNotFound;
-        } catch (UnauthorizedAccessException uae) {
+        } catch (UnauthorizedAccessException) {
             return TaskResult.AccessDenied;
-        } catch (DirectoryNotFoundException dnfe) {
+        } catch (DirectoryNotFoundException) {
             return TaskResult.DirectoryNotFound;
-        } catch (PathTooLongException ptle) {
+        } catch (PathTooLongException) {
             return TaskResult.PathTooLong;
-        } catch (ArgumentException ae) {
+        } catch (ArgumentException) {
             return TaskResult.InvalidParameter;
         } catch {
             return TaskResult.IOError;
         }
         return TaskResult.Success;
     }
-    public static TaskResult GetOutputPath(ChestParams cp, out string output, bool encrypt) {
+    public static TaskResult GetOutputPath(ChestParams cp, out string output) {
         output = null;
         string extension;
-        extension = encrypt ? ".dcf" : "";
+        extension = cp.Encrypt ? ".dcf" : "";
         if (string.IsNullOrEmpty(cp.OutputFile))
             output = Environment.CurrentDirectory + "/" + Path.GetFileNameWithoutExtension(cp.InputFile) + extension;
         else {
@@ -63,7 +63,7 @@ static class FileHelper {
 
             // 파일명은 있는데 확장자가 dcf 가 아니거나 없는 경우
             else
-                if (encrypt && (string.IsNullOrEmpty(ext) || !ext.Equals(".dcf", StringComparison.InvariantCultureIgnoreCase)))
+                if (cp.Encrypt && (string.IsNullOrEmpty(ext) || !ext.Equals(".dcf", StringComparison.InvariantCultureIgnoreCase)))
                 filename += extension;
 
             // 디렉터리 정보를 가져온다.
@@ -103,5 +103,9 @@ static class FileHelper {
             }
         }
         return TaskResult.Success;
+    }
+    public static void DeleteFileIgnoreErrors(string fileName) {
+        try { File.Delete(fileName); }
+        catch { }
     }
 }

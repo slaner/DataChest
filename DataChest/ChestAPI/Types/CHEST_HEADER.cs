@@ -110,10 +110,10 @@ struct CHEST_HEADER {
         hdr.e_size = (ulong) b.LongLength;
 
         fs.Seek(0, SeekOrigin.Begin);
-        hdr.r_checksum = ChestAPI.ComputeHash(fs);
-        hdr.e_checksum = ChestAPI.ComputeHash(b);
+        hdr.r_checksum = HashAPI.ComputeHashUInt32(fs);
+        hdr.e_checksum = HashAPI.ComputeHashUInt32(b);
         byte[] temp = hdr.ToArray();
-        hdr.h_checksum = ChestAPI.ComputeHash(temp);
+        hdr.h_checksum = HashAPI.ComputeHashUInt32(temp);
 
         return hdr;
     }
@@ -152,7 +152,7 @@ struct CHEST_HEADER {
         hdr.r_size = br.ReadUInt64();
 
         byte[] hb = hdr.ToArray();
-        if (ChestAPI.ComputeHash(hb) != chkHeader)
+        if (HashAPI.ComputeHashUInt32(hb) != chkHeader)
             return TaskResult.IncorrectHeaderChecksum;
 
         hdr.h_checksum = chkHeader;

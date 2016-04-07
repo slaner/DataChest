@@ -183,7 +183,7 @@ sealed class ChestParams {
                 byte[] b = ChestAPI.SystemUnicodeEncoding.GetBytes(g_password.Substring(PhraseFileLookupPrefix.Length));
                 s = new MemoryStream(b);
                 return TaskResult.Success;
-            } catch (System.Text.EncoderFallbackException efe) {
+            } catch (System.Text.EncoderFallbackException) {
                 return TaskResult.EncodingError;
             }
         }
@@ -208,7 +208,7 @@ sealed class ChestParams {
                 byte[] b = ChestAPI.SystemUnicodeEncoding.GetBytes(g_iv.Substring(PhrasePlainTextPrefix.Length));
                 s = new MemoryStream(b);
                 return TaskResult.Success;
-            } catch (System.Text.EncoderFallbackException efe) {
+            } catch (System.Text.EncoderFallbackException) {
                 return TaskResult.EncodingError;
             }
         }

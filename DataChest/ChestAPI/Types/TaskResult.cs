@@ -62,7 +62,7 @@ public enum TaskResult : ushort {
     /// 유효하지 않은 알고리즘입니다.
     /// </summary>
     InvalidAlgorithm = 40,
-    
+
     /// <summary>
     /// 유효하지 않은 시그니쳐입니다.
     /// </summary>
@@ -98,11 +98,6 @@ public enum TaskResult : ushort {
     /// </summary>
     InvalidIV,
 
-    /// <summary>
-    /// 유효하지 않은 키거나 데이터가 손상되었습니다.
-    /// </summary>
-    InvalidKeyOrDataIsCorrupted,
-
 
     /// <summary>
     /// 알고리즘 초기화에 실패했습니다.
@@ -133,7 +128,7 @@ public enum TaskResult : ushort {
     /// 스트림 쓰기 오류입니다.
     /// </summary>
     StreamWriteError,
-    
+
     /// <summary>
     /// 메모리가 부족합니다.
     /// </summary>
