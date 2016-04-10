@@ -98,6 +98,17 @@ public enum TaskResult : ushort {
     /// </summary>
     InvalidIV,
 
+    /// <summary>
+    /// 유효하지 않은 버퍼 크기입니다.
+    /// </summary>
+    InvalidBufferSize,
+
+    /// <summary>
+    /// 유효하지 않은 헤더 클래스입니다.
+    /// </summary>
+    InvalidHeaderClass,
+
+
 
     /// <summary>
     /// 알고리즘 초기화에 실패했습니다.
@@ -182,4 +193,15 @@ public enum TaskResult : ushort {
     /// 암호화된 데이터의 체크섬이 올바르지 않습니다.
     /// </summary>
     IncorrectEncryptedDataChecksum,
+
+
+    /// <summary>
+    /// 헤더의 개체를 만들지 못했습니다.
+    /// </summary>
+    CannotCreateHeaderInstance = 90,
+
+    /// <summary>
+    /// 헤더 버전이 맞지 않습니다.
+    /// </summary>
+    HeaderVersionNotMatch,
 }
