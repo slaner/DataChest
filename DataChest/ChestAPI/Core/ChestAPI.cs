@@ -1,26 +1,20 @@
 ﻿/*
-  Copyright (c) 2016 HYE WON, HWANG
+  Copyright (C) 2016. HYE WON, HWANG
 
-  Permission is hereby granted, free of charge, to any person
-  obtaining a copy of this software and associated documentation
-  files (the "Software"), to deal in the Software without
-  restriction, including without limitation the rights to use,
-  copy, modify, merge, publish, distribute, sublicense, and/or sell
-  copies of the Software, and to permit persons to whom the
-  Software is furnished to do so, subject to the following
-  conditions:
+  This file is part of DataChest.
 
-  The above copyright notice and this permission notice shall be
-  included in all copies or substantial portions of the Software.
+  DataChest is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
 
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-  OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-  HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-  WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-  OTHER DEALINGS IN THE SOFTWARE.
+  DataChest is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with DataChest.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 using System;
@@ -52,7 +46,7 @@ static class ChestAPI {
     /// <summary>
     /// ChestAPI 버전을 나타냅니다.
     /// </summary>
-    public const ushort Version = 1;
+    public const ushort Version = 2;
     /// <summary>
     /// 데이터를 암복호화할 때 사용할 버퍼의 크기입니다.
     /// </summary>
@@ -60,9 +54,9 @@ static class ChestAPI {
 
 
     /// <summary>
-    /// 파일에 대한 암호화 또는 복호화 작업을 수행합니다.
+    /// 암복호화 API 호출에 필요한 정보를 저장하고 있는 <see cref="ChestParams" /> 개체를 이용하여 암복호화 API를 호출합니다.
     /// </summary>
-    /// <param name="cp">API 호출에 필요한 옵션 정보를 담고 있는 ChestParams 클래스의 개체입니다.</param>
+    /// <param name="cp">암복호화 API 호출에 필요한 정보를 저장하고 있는 <see cref="ChestParams" /> 개체입니다.</param>
     public static TaskResult Invoke(ChestParams cp) {
         // 입력 파일이 없는 경우
         // 잘못된 버전이 입력된 경우
@@ -89,18 +83,19 @@ static class ChestAPI {
 
         // 파일에 대한 테스트를 수행할 경우
         #region Run Test Handler
-        if ( cp.RunTest ) {
+        if (cp.RunTest) {
             // 체크섬 및 암.복호화 결과를 저장하기 위한 변수를 선언한다.
             byte[] rtResult;
-            CHEST_HEADER rtHdr = default(CHEST_HEADER);
+
+            HeaderBase rtHdr = null;
             uint hash;
 
             // 복호화일 경우 헤더를 먼저 가져온다.
-            if ( !cp.Encrypt ) {
-                r = CHEST_HEADER.FromStream(fs, out rtHdr);
+            if (!cp.Encrypt) {
+                r = HeaderBase.FromStreamWithVersion(fs, cp.Version, out rtHdr);
 
                 // 헤더를 가져오지 못한 경우
-                if ( r != TaskResult.Success ) {
+                if (r != TaskResult.Success) {
                     Disposes(sa, fs);
                     return r;
                 }
@@ -111,7 +106,7 @@ static class ChestAPI {
                     hash = HashAPI.ComputeHashUInt32(fs);
 
                     // 체크섬 값을 비교한다.
-                    if (rtHdr.e_checksum != hash ) {
+                    if (rtHdr.EChecksum != hash) {
                         Disposes(sa, fs);
                         return TaskResult.IncorrectEncryptedDataChecksum;
                     }
@@ -125,13 +120,13 @@ static class ChestAPI {
             r = cp.Encrypt ? Encrypt(fs, sa, out rtResult) : Decrypt(fs, sa, out rtResult);
 
             // 실패한 경우 사용하는 리소스를 메모리에서 해제한 후 실패 코드를 반환한다.
-            if ( r != TaskResult.Success ) {
+            if (r != TaskResult.Success) {
                 Disposes(sa, fs);
                 return r;
             }
 
             // 체크섬 검증을 하지 않거나 파일을 암호화한 경우 체크섬 검증을 건너뛴다.
-            if ( !cp.Verify || cp.Encrypt ) {
+            if (!cp.Verify || cp.Encrypt) {
                 Disposes(sa, fs);
                 return r;
             }
@@ -140,7 +135,7 @@ static class ChestAPI {
             hash = HashAPI.ComputeHashUInt32(rtResult);
 
             // 체크섬 비교
-            if (rtHdr.r_checksum != hash ) {
+            if (rtHdr.RChecksum != hash) {
                 Disposes(sa, fs);
                 return TaskResult.IncorrectRawDataChecksum;
             }
@@ -155,7 +150,7 @@ static class ChestAPI {
 
         // 출력 파일이 생성될 경로를 만든다.
         string output;
-        r = FileHelper.GetOutputPath(cp, out output);
+        r = FileHelper.BuildOutput(cp, out output);
 
         // 경로를 만들지 못한 경우
         if (r != TaskResult.Success) {
@@ -164,8 +159,7 @@ static class ChestAPI {
         }
 
         FileStream ofs;
-        try { ofs = new FileStream(output, cp.Overwrite ? FileMode.Create : FileMode.CreateNew); }
-        catch (IOException) {
+        try { ofs = new FileStream(output, cp.Overwrite ? FileMode.Create : FileMode.CreateNew); } catch (IOException) {
             Disposes(sa, fs);
             return TaskResult.FileAlreadyExists;
         }
@@ -198,14 +192,27 @@ static class ChestAPI {
             }
 
             // 헤더를 만든다.
-            CHEST_HEADER hdr = CHEST_HEADER.CreateHeader(Version, fs, result);
-            byte[] bHdr = hdr.ToArray();
+            HeaderBase hdr = HeaderBase.CreateEmptyHeader(cp.Version);
+
+            // 커멘트가 있고 버전이 2 이상인 경우
+            if (!string.IsNullOrEmpty(cp.Comment) && cp.Version >= 2) {
+                ((ChestHeader2)hdr).Comment = cp.Comment;
+            }
+
+            // 헤더의 정보를 기록합니다.
+            r = hdr.AssignBasicInformationEncrypt(fs, result);
+            if (r != TaskResult.Success) return r;
+
+            // 헤더를 바이트 배열로 변환합니다.
+            byte[] bHeader;
+            r = hdr.ToArray(out bHeader);
+            if (r != TaskResult.Success) return r;
 
             // 파일에 쓰기 위해 BinaryWriter 개체를 생성한다.
             try {
                 using (BinaryWriter bw = new BinaryWriter(ofs)) {
                     // 헤더를 먼저 기록한다.
-                    bw.Write(bHdr);
+                    bw.Write(bHeader);
 
                     // TODO: 64-bit integer support
                     // 암호화된 데이터를 기록한다.
@@ -228,10 +235,9 @@ static class ChestAPI {
 
             // 파일에 모두 기록 성공.
             // 정리(Cleanup) 옵션이 설정되어 있다면 입력 파일을 삭제한다.
-            if ( cp.Cleanup ) {
+            if (cp.Cleanup) {
                 // TODO: Multiple file support?
-                try { File.Delete(cp.InputFile); }
-                catch {
+                try { File.Delete(cp.InputFile); } catch {
                     Disposes(sa, fs);
                     return TaskResult.CleanupFailedSucceed;
                 }
@@ -243,24 +249,24 @@ static class ChestAPI {
         // 복호화의 경우
         else {
             // 파일에서 헤더 정보를 가져온다.
-            CHEST_HEADER hdr;
-            r = CHEST_HEADER.FromStream(fs, out hdr);
+            HeaderBase hdr;
+            r = HeaderBase.FromStreamWithVersion(fs, cp.Version, out hdr);
 
             // 헤더 정보를 가져오지 못한 경우
-            if ( r != TaskResult.Success ) {
+            if (r != TaskResult.Success) {
                 Disposes(fs, sa, ofs);
                 FileHelper.DeleteFileIgnoreErrors(output);
                 return r;
             }
 
             // 체크섬 검증을 하는 경우
-            if ( cp.Verify ) {
+            if (cp.Verify) {
                 // 암호화된 데이터의 체크섬 값과 헤더의 e_checksum 값이 일치하는지 검사한다.
                 long lnPrevPos = fs.Position;
                 uint prevHash = HashAPI.ComputeHashUInt32(fs);
 
                 // 일치하지 않는 경우
-                if ( hdr.e_checksum != prevHash ) {
+                if (hdr.EChecksum != prevHash) {
                     Disposes(fs, sa, ofs);
                     FileHelper.DeleteFileIgnoreErrors(output);
                     return TaskResult.IncorrectEncryptedDataChecksum;
@@ -277,10 +283,10 @@ static class ChestAPI {
                 FileHelper.DeleteFileIgnoreErrors(output);
                 return r;
             }
-            
+
             // 복호화가 완료된 후 데이터의 체크섬 검증을 수행한다.
             if (cp.Verify) {
-                if ( HashAPI.ComputeHashUInt32(result) != hdr.r_checksum ) {
+                if (HashAPI.ComputeHashUInt32(result) != hdr.RChecksum) {
                     Disposes(fs, sa, ofs);
                     FileHelper.DeleteFileIgnoreErrors(output);
                     return TaskResult.IncorrectRawDataChecksum;
@@ -336,7 +342,7 @@ static class ChestAPI {
 
         // 유효하지 않은 알고리즘인 경우 
         if (sa == null) return TaskResult.InvalidAlgorithm;
-        
+
         TaskResult r;
         Stream pw, iv;
 
@@ -361,10 +367,11 @@ static class ChestAPI {
         // 실패한 경우 종료한다.
         else if (r != TaskResult.Success) return r;
         // 성공한 경우, 체크섬를 계산하고 IV로 사용한다.
-        else sa.IV = HashAPI.ComputeHash(iv);
-
-        // IV 스트림을 해제한다.
-        iv.Dispose();
+        else {
+            sa.IV = HashAPI.ComputeHash(iv);
+            // IV 스트림을 해제한다.
+            iv.Dispose();
+        }
 
         return TaskResult.Success;
     }
@@ -429,14 +436,12 @@ static class ChestAPI {
             // 읽은 데이터의 크기가 1 이상 (데이터가 있음)
             while (nRead > 0) {
                 // 상황별 예외처리
-                try { cs.Write(temp, 0, nRead); }
-                catch {
+                try { cs.Write(temp, 0, nRead); } catch {
                     ct.Dispose();
                     return TaskResult.StreamWriteError;
                 }
 
-                try { nRead = s.Read(temp, 0, BufferSize); }
-                catch {
+                try { nRead = s.Read(temp, 0, BufferSize); } catch {
                     ct.Dispose();
                     return TaskResult.StreamReadError;
                 }
@@ -466,7 +471,7 @@ static class ChestAPI {
 
             // 배열 선언
             try { temp = new byte[BufferSize]; }
-            
+
             // 예외가 발생하면 100% 메모리 부족 예외다.
             catch {
                 SafeDisposeCryptoStream(cs);
@@ -531,7 +536,7 @@ static class ChestAPI {
             }
             // 변수 정보를 가져오지 못한 경우 그냥 종료한다.
             else return;
-            
+
             // 값을 설정했으니 다시 Dispose를 호출한다.
             cs.Dispose();
         }
@@ -545,5 +550,4 @@ static class ChestAPI {
             dis.Dispose();
         }
     }
-    
 }

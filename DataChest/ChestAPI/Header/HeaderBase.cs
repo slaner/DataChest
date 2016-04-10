@@ -1,55 +1,25 @@
-﻿using System;
+﻿/*
+  Copyright (C) 2016. HYE WON, HWANG
+
+  This file is part of DataChest.
+
+  DataChest is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  DataChest is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with DataChest.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+using System;
 using System.IO;
 using System.Reflection;
-
-class ChestHeader2 : HeaderBase {
-    string g_comment;
-    public ChestHeader2() : base(2) { }
-
-    protected override void ProcessArray(BinaryWriter bw) {
-        if ( string.IsNullOrEmpty(g_comment) )
-            bw.Write((ushort) 0);
-        else {
-            byte[] bComment = ChestAPI.SystemUnicodeEncoding.GetBytes(g_comment);
-            bw.Write(CommentLength);
-            bw.Write(bComment);
-        }
-    }
-    protected override TaskResult ProcessStream(BinaryReader br) {
-        return TaskResult.InvalidParameter;
-    }
-
-    /// <summary>
-    /// 필드 버전이 아닌 헤더의 버전을 가져옵니다.
-    /// 상위 버전의 헤더를 만든 경우 이 속성이 정확한 헤더 버전을 반환하도록 재정의해야 합니다.
-    /// </summary>
-    public override ushort HeaderVersion {
-        get { return 2; }
-    }
-    /// <summary>
-    /// 코멘트의 길이를 가져옵니다. 코멘트는 유니코드로 저장되기 때문에 이 값은 원래 길이의 배수입니다.
-    /// </summary>
-    public ushort CommentLength {
-        get {
-            if (g_comment == null) return 0;
-            return (ushort) (g_comment.Length * 2);
-        }
-    }
-    /// <summary>
-    /// 코멘트를 가져오거나 설정합니다.
-    /// </summary>
-    public string Comment {
-        get { return g_comment; }
-        set {
-            if (value == null) return;
-
-            // 32727 = short.MaxValue - 40(HeaderBaseSize + 2 for comment length)
-            if (value.Length > 32727) return;
-            g_comment = value;
-            HSize = (ushort) (HeaderBaseSize + 2 + (g_comment.Length * 2));
-        }
-    }
-}
 
 /// <summary>
 /// ChestAPI 파일 형식에서 사용하는 헤더의 기본 모델입니다.
@@ -79,32 +49,7 @@ class HeaderBase : IHeader {
         g_signature = 22344;
         g_version = headerVersion;
     }
-
-
-
-
-    public static CHEST_HEADER CreateHeader(ushort version, FileStream fs, byte[] b) {
-        CHEST_HEADER hdr = new CHEST_HEADER(version);
-        hdr.r_size = (ulong)fs.Length;
-        hdr.e_size = (ulong)b.LongLength;
-
-        fs.Seek(0, SeekOrigin.Begin);
-        hdr.r_checksum = HashAPI.ComputeHashUInt32(fs);
-        hdr.e_checksum = HashAPI.ComputeHashUInt32(b);
-        byte[] temp = hdr.ToArray();
-        hdr.h_checksum = HashAPI.ComputeHashUInt32(temp);
-
-        return hdr;
-    }
-    /*
-    public static TaskResult FromFile(string file, out CHEST_HEADER hdr) {
-        hdr = default(CHEST_HEADER);
-        FileStream fs;
-        TaskResult r = FileHelper.OpenFileStream(file, out fs);
-        if (r != TaskResult.Success) return r;
-        return FromStream(fs, out hdr);
-    }
-    */
+    
     /// <summary>
     /// 기본 필드가 아닌 상위 버전의 헤더에서 추가된 필드를 배열로 변환하는 작업을 처리하는 함수입니다.
     /// 추가된 필드는 <see cref="ProcessArray(BinaryWriter)" /> 메서드의 매개변수를 이용하여 <see cref="BinaryWriter" />.Write() 메서드를 호출하여야 합니다.
@@ -116,10 +61,50 @@ class HeaderBase : IHeader {
     /// 추가된 필드는 <see cref="ProcessStream(BinaryReader)" /> 메서드의 매개변수를 이용하여 <see cref="BinaryReader" />.Read...() 메서드를 호출하여야 합니다.
     /// </summary>
     /// <param name="br">필드의 내용을 읽어올 <see cref="BinaryReader" /> 개체입니다.</param>
-    protected virtual TaskResult ProcessStream(BinaryReader br) {
-        return TaskResult.Success;
-    }
+    protected virtual void ProcessStream(BinaryReader br) { }
     
+    /// <summary>
+    /// 버전에 맞는 빈 헤더를 만듭니다.
+    /// </summary>
+    /// <param name="version">만들 헤더의 버전입니다.</param>
+    public static HeaderBase CreateEmptyHeader(ushort version) {
+        switch (version) {
+            case 1:
+                return new ChestHeader1();
+
+            case 2:
+                return new ChestHeader2();
+
+            default:
+                return null;
+        }
+    }
+    /// <summary>
+    /// 지정된 파일로부터 헤더를 불러옵니다.
+    /// </summary>
+    /// <typeparam name="T"><see cref="HeaderBase" /> 클래스를 상속하는 개체입니다.</typeparam>
+    /// <param name="s">헤더 데이터가 저장된 파일의 경로입니다.</param>
+    /// <param name="hdr">만들어진 헤더가 저장될 변수입니다.</param>
+    public static TaskResult FromFile<T>(string fileName, out T hdr) where T : HeaderBase {
+        hdr = default(T);
+        FileStream fs;
+        TaskResult r = FileHelper.OpenFileStream(fileName, out fs);
+        if (r != TaskResult.Success) return r;
+        return FromStream(fs, out hdr);
+    }
+    /// <summary>
+    /// 지정된 파일과 버전을 이용하여 헤더를 불러옵니다.
+    /// </summary>
+    /// <param name="s">헤더 데이터가 저장된 파일의 경로입니다.</param>
+    /// <param name="version">헤더의 버전입니다.</param>
+    /// <param name="hdr">만들어진 헤더가 저장될 변수입니다.</param>
+    public static TaskResult FromFileWithVersion(string fileName, ushort version, out HeaderBase hdr) {
+        hdr = null;
+        FileStream fs;
+        TaskResult r = FileHelper.OpenFileStream(fileName, out fs);
+        if (r != TaskResult.Success) return r;
+        return FromStreamWithVersion(fs, version, out hdr);
+    }
     /// <summary>
     /// 지정된 <see cref="Stream" /> 개체로부터 헤더를 불러옵니다.
     /// </summary>
@@ -144,8 +129,11 @@ class HeaderBase : IHeader {
 
         // 스트림의 데이터를 읽어올 개체를 만든다.
         BinaryReader br;
-        try { br = new BinaryReader(s); }
-        catch { return TaskResult.InvalidParameter; }
+        try {
+            br = new BinaryReader(s);
+            s.Seek(0, SeekOrigin.Begin);
+        }
+        catch { return TaskResult.StreamError; }
 
         // 시그니쳐를 읽어오고 값을 검사한다.
         temp.g_signature = br.ReadUInt16();
@@ -155,13 +143,11 @@ class HeaderBase : IHeader {
         // 버전은 현재 사용중인 어셈블리의 ChestAPI 버전보다 크거나, 헤더의 버전과 다를 경우 오류가 발생한다.
         temp.g_version = br.ReadUInt16();
         if (temp.Version > ChestAPI.Version) return TaskResult.NotSupportedVersion;
-        if (temp.Version != temp.HeaderVersion) return TaskResult.HeaderVersionDamagedOrCorrupted;
+        if (temp.Version != temp.HeaderVersion) return TaskResult.HeaderVersionNotMatch;
         
+        // 이 값은 반드시 0이여야 한다.
         temp.g_unused = br.ReadUInt32();
-        // Obsolete 특성때문에 발생하는 경고는 무시한다.
-#pragma warning disable CS0612
         if (temp.Unused != 0) return TaskResult.InvalidHeaderFieldValue;
-#pragma warning restore CS0612
 
         // 기본 헤더의 구조에 맞게 순서대로 값을 읽어온다.
         uint chkHeader = br.ReadUInt32();
@@ -173,13 +159,15 @@ class HeaderBase : IHeader {
 
         // 기본 헤더의 값 읽기가 끝났다.
         // 여기서부터는 추가된 필드에 대한 값 읽기가 진행되는 부분이다.
-        TaskResult r = temp.ProcessStream(br);
-
-        // 실패한 경우 
+        try { temp.ProcessStream(br); }
+        catch { return TaskResult.ErrorCausedUDPR; }
+        
+        // 헤더를 배열로 변환한다.
+        byte[] bHdr;
+        TaskResult r = temp.ToArray(out bHdr);
         if (r != TaskResult.Success) return r;
 
-        // 헤더를 배열로 변환하고 체크섬을 검증한다.
-        byte[] bHdr = temp.ToArray();
+        // 체크섬 검증
         if (HashAPI.ComputeHashUInt32(bHdr) != chkHeader)
             return TaskResult.IncorrectHeaderChecksum;
 
@@ -189,9 +177,38 @@ class HeaderBase : IHeader {
         return TaskResult.Success;
     }
     /// <summary>
+    /// 지정된 <see cref="Stream" /> 개체와 버전을 이용하여 헤더를 불러옵니다.
+    /// </summary>
+    /// <param name="s">헤더 데이터가 저장된 <see cref="Stream" /> 개체입니다.</param>
+    /// <param name="version">헤더의 버전입니다.</param>
+    /// <param name="hdr">만들어진 헤더가 저장될 변수입니다.</param>
+    public static TaskResult FromStreamWithVersion(Stream s, ushort version, out HeaderBase hdr) {
+        hdr = null;
+        TaskResult r;
+        switch (version) {
+            case 1:
+                ChestHeader1 hdr1;
+                r = FromStream(s, out hdr1);
+                if (r != TaskResult.Success) return r;
+                hdr = hdr1;
+                return TaskResult.Success;
+
+            case 2:
+                ChestHeader2 hdr2;
+                r = FromStream(s, out hdr2);
+                if (r != TaskResult.Success) return r;
+                hdr = hdr2;
+                return TaskResult.Success;
+
+            default:
+                return TaskResult.NotSupportedVersion;
+        }
+    }
+    /// <summary>
     /// 헤더의 내용을 바이트 배열로 변환합니다.
     /// </summary>
-    public byte[] ToArray() {
+    public TaskResult ToArray(out byte[] arr) {
+        arr = null;
         MemoryStream ms = new MemoryStream(HSize);
         using (BinaryWriter bw = new BinaryWriter(ms)) {
             bw.Write(g_signature);
@@ -205,18 +222,40 @@ class HeaderBase : IHeader {
             bw.Write(g_rsize);
 
             // Higher version support
-            ProcessArray(bw);
+            try { ProcessArray(bw); }
+            catch { return TaskResult.ErrorCausedUDPR; }
         }
-        return ms.ToArray();
+
+        arr = ms.ToArray();
+        return TaskResult.Success;
     }
-    
+    /// <summary>
+    /// 암호화 작업에 대한 필드의 값을 설정합니다.
+    /// </summary>
+    /// <param name="s">암호화할 데이터가 저장되어 있는 <see cref="Stream" /> 개체입니다.</param>
+    /// <param name="b">암호화된 데이터가 저장된 바이트 배열입니다.</param>
+    public TaskResult AssignBasicInformationEncrypt(Stream s, byte[] b) {
+        g_rsize = (ulong) s.Length;
+        g_esize = (ulong)b.LongLength;
+
+        s.Seek(0, SeekOrigin.Begin);
+        g_rchksum = HashAPI.ComputeHashUInt32(s);
+        g_echksum = HashAPI.ComputeHashUInt32(b);
+        byte[] bTemp;
+        TaskResult r = ToArray(out bTemp);
+        if (r != TaskResult.Success) return r;
+
+        g_hchksum = HashAPI.ComputeHashUInt32(bTemp);
+
+        return TaskResult.Success;
+    }
 
     /// <summary>
     /// 필드 버전이 아닌 헤더의 버전을 가져옵니다.
     /// 상위 버전의 헤더를 만든 경우 이 속성이 정확한 헤더 버전을 반환하도록 재정의해야 합니다.
     /// </summary>
     public virtual ushort HeaderVersion {
-        get { return 1; }
+        get { return 0; }
     }
     /// <summary>
     /// 시그니쳐를 가져옵니다.
@@ -233,7 +272,6 @@ class HeaderBase : IHeader {
     /// <summary>
     /// 사용되지 않습니다.
     /// </summary>
-    [Obsolete()]
     public uint Unused {
         get { return g_unused; }
     }

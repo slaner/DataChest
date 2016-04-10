@@ -1,26 +1,20 @@
 ﻿/*
-  Copyright (c) 2016 HYE WON, HWANG
+  Copyright (C) 2016. HYE WON, HWANG
 
-  Permission is hereby granted, free of charge, to any person
-  obtaining a copy of this software and associated documentation
-  files (the "Software"), to deal in the Software without
-  restriction, including without limitation the rights to use,
-  copy, modify, merge, publish, distribute, sublicense, and/or sell
-  copies of the Software, and to permit persons to whom the
-  Software is furnished to do so, subject to the following
-  conditions:
+  This file is part of DataChest.
 
-  The above copyright notice and this permission notice shall be
-  included in all copies or substantial portions of the Software.
+  DataChest is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
 
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-  OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-  HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-  WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-  OTHER DEALINGS IN THE SOFTWARE.
+  DataChest is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with DataChest.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 // 추가 버전을 공지하려면 아래 주석을 제거하세요
@@ -71,19 +65,24 @@ class Program {
 
             // 헤더 정보 표시
             if(opt.ShowHeaderInfo) {
-                CHEST_HEADER hdr;
-                r = CHEST_HEADER.FromFile(opt.In[0], out hdr);
+                HeaderBase hdr;
+                r = HeaderBase.FromFile(opt.In[0], out hdr);
                 if (r != TaskResult.Success)
                     return SetError(r);
                 
                 Console.WriteLine("CHEST_HEADER information");
-                Console.WriteLine("File                   : " + opt.In[0]);
-                Console.WriteLine("Version                : 0x{0:x4} ({0})", hdr.version);
-                Console.WriteLine("Encrypted Data Checksum: 0x{0:x8} ({0})", hdr.e_checksum);
-                Console.WriteLine("Raw Data Checksum      : 0x{0:x8} ({0})", hdr.r_checksum);
-                Console.WriteLine("Header Checksum        : 0x{0:x8} ({0})", hdr.h_checksum);
-                Console.WriteLine("Encrypted Data Size    : 0x{0:x16} ({0})", hdr.e_size);
-                Console.WriteLine("Raw Data Size          : 0x{0:x16} ({0})", hdr.r_size);
+                Console.WriteLine("File              : " + opt.In[0]);
+                Console.WriteLine("Version           : 0x{0:x4} ({0})", hdr.Version);
+                Console.WriteLine("Header Checksum   : 0x{0:x8} ({0})", hdr.HChecksum);
+                Console.WriteLine("Enc.Data Checksum : 0x{0:x8} ({0})", hdr.EChecksum);
+                Console.WriteLine("Raw Data Checksum : 0x{0:x8} ({0})", hdr.RChecksum);
+                Console.WriteLine("Header Size       : 0x{0:x4} ({0})", hdr.HSize);
+                Console.WriteLine("Enc.Data Size     : 0x{0:x16} ({0})", hdr.ESize);
+                Console.WriteLine("Raw Data Size     : 0x{0:x16} ({0})", hdr.RSize);
+
+                if ( opt.APIVersion == 2)
+                    Console.WriteLine("Comment           : {0}", ((ChestHeader2)hdr).Comment);
+
                 return (int) TaskResult.Success;
             }
 
@@ -108,6 +107,14 @@ class Program {
                     return SetError(TaskResult.AmbiguousOption, "-t 옵션과 -c 옵션은 같이 사용될 수 없습니다.");
             }
 
+            // 버퍼가 설정된 경우
+            if ( opt.BufferSize.HasValue ) {
+                if (opt.BufferSize.Value > 0)
+                    ChestAPI.BufferSize = opt.BufferSize.Value;
+                else
+                    return SetError(TaskResult.InvalidBufferSize);
+            }
+
             ChestParams cp = new ChestParams();
             cp.Cleanup = opt.Cleanup;
             cp.Overwrite = opt.Overwrite;
@@ -120,7 +127,7 @@ class Program {
             cp.SetIV(opt.IV);
             cp.SetPassword(opt.Password);
             cp.InputFile = opt.In[0];
-
+            
             r = ChestAPI.Invoke(cp);
             return SetError(r);
         }
@@ -129,15 +136,15 @@ class Program {
     static int ShowVersionInfo() {
         HeadingInfo header = new HeadingInfo(
             "Data Chest",
-            Program.AssemblyVersion
+            AssemblyVersion
 #if ADT_VERSION_NOTIFY
-                + "-" + Program.AdtVersion
+                + "-" + AdtVersion
 #endif
             );
         CopyrightInfo copyright = new CopyrightInfo(
             "HYE WON, HWANG"
 #if PROJECT_MODIFIED
-                + " and Modified by " + Program.Modifier
+                + " and Modified by " + Modifier
 #endif
                 + ".", 2016
         );
