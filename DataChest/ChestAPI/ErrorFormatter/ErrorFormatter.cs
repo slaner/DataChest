@@ -1,29 +1,22 @@
 ﻿/*
-  Copyright (c) 2016 HYE WON, HWANG
+  Copyright (C) 2016. HYE WON, HWANG
 
-  Permission is hereby granted, free of charge, to any person
-  obtaining a copy of this software and associated documentation
-  files (the "Software"), to deal in the Software without
-  restriction, including without limitation the rights to use,
-  copy, modify, merge, publish, distribute, sublicense, and/or sell
-  copies of the Software, and to permit persons to whom the
-  Software is furnished to do so, subject to the following
-  conditions:
+  This file is part of DataChest.
 
-  The above copyright notice and this permission notice shall be
-  included in all copies or substantial portions of the Software.
+  DataChest is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
 
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-  OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-  HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-  WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-  OTHER DEALINGS IN THE SOFTWARE.
+  DataChest is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with DataChest.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-using System;
 using System.Collections.Generic;
 
 static class ErrorFormatter {
@@ -49,10 +42,11 @@ static class ErrorFormatter {
         {51, "입출력 오류입니다."},
         {52, "인코딩 오류입니다."},
         {53, "파일 열기 오류입니다."},
-        {54, "스트림 읽기 오류입니다."},
-        {55, "스트림 쓰기 오류입니다."},
-        {56, "메모리가 부족합니다."},
-        {57, "경로가 너무 깁니다."},
+        {54, "스트림 오류입니다."},
+        {55, "스트림 읽기 오류입니다."},
+        {56, "스트림 쓰기 오류입니다."},
+        {57, "메모리가 부족합니다."},
+        {58, "경로가 너무 깁니다."},
 
         {60, "파일을 찾을 수 없습니다."},
         {61, "디렉터리를 찾을 수 없습니다."},
@@ -67,6 +61,8 @@ static class ErrorFormatter {
 
         {90, "헤더의 개체를 만들지 못했습니다."},
         {91, "헤더 버전이 맞지 않습니다."},
+
+        {130, "사용자 정의 처리 루틴(UDPR, User Defined Processing Routine)에서 오류가 발생했습니다."},
     };
 
     public static string GetErrorMessageFromTaskResult(TaskResult r) {

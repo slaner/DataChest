@@ -32,6 +32,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -41,14 +42,19 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ChestAPI\Core\CryptoAPI.cs" />
+    <Compile Include="ChestAPI\Core\HashAPI.cs" />
     <Compile Include="ChestAPI\ErrorFormatter\ErrorFormatter.cs" />
+    <Compile Include="ChestAPI\Header\ChestHeader1.cs" />
+    <Compile Include="ChestAPI\Header\ChestHeader2.cs" />
+    <Compile Include="ChestAPI\Header\HeaderBase.cs" />
+    <Compile Include="ChestAPI\Header\IHeader.cs" />
     <Compile Include="ChestAPI\Helper\FileHelper.cs" />
+    <Compile Include="ChestAPI\Helper\UnitHelper.cs" />
+    <Compile Include="ChestAPI\Performance\PerformanceLogger.cs" />
     <Compile Include="ChestAPI\ThirdPartyCompatible\ChestAPIOptions.cs" />
     <Compile Include="ChestAPI\Types\Algorithms.cs" />
     <Compile Include="ChestAPI\Core\ChestAPI.cs" />
     <Compile Include="ChestAPI\Types\ChestParams.cs" />
-    <Compile Include="ChestAPI\Types\CHEST_HEADER.cs" />
     <Compile Include="ChestAPI\Types\TaskResult.cs" />
     <Compile Include="CommandLine\Attributes\AssemblyLicenseAttribute.cs" />
     <Compile Include="CommandLine\Attributes\AssemblyUsageAttribute.cs" />
