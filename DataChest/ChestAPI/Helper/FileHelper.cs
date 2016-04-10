@@ -1,32 +1,34 @@
 ﻿/*
-  Copyright (c) 2016 HYE WON, HWANG
+  Copyright (C) 2016. HYE WON, HWANG
 
-  Permission is hereby granted, free of charge, to any person
-  obtaining a copy of this software and associated documentation
-  files (the "Software"), to deal in the Software without
-  restriction, including without limitation the rights to use,
-  copy, modify, merge, publish, distribute, sublicense, and/or sell
-  copies of the Software, and to permit persons to whom the
-  Software is furnished to do so, subject to the following
-  conditions:
+  This file is part of DataChest.
 
-  The above copyright notice and this permission notice shall be
-  included in all copies or substantial portions of the Software.
+  DataChest is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
 
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-  OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-  HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-  WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-  OTHER DEALINGS IN THE SOFTWARE.
+  DataChest is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with DataChest.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 using System;
 using System.IO;
 
+/// <summary>
+/// 파일 작업을 간편화해놓은 함수를 노출하는 클래스입니다.
+/// </summary>
 static class FileHelper {
+    /// <summary>
+    /// 지정한 파일에 대한 파일 스트림을 엽니다.
+    /// </summary>
+    /// <param name="fileName">열 파일입니다.</param>
+    /// <param name="fs">열린 파일의 스트림이 저장될 변수입니다.</param>
     public static TaskResult OpenFileStream(string fileName, out FileStream fs) {
         fs = null;
         try {
@@ -46,7 +48,12 @@ static class FileHelper {
         }
         return TaskResult.Success;
     }
-    public static TaskResult GetOutputPath(ChestParams cp, out string output) {
+    /// <summary>
+    /// 출력 경로를 만듭니다.
+    /// </summary>
+    /// <param name="cp">출력 경로를 만드는데 참고할 <see cref="ChestParams" /> 개체입니다.</param>
+    /// <param name="output">만들어진 출력 경로가 저장될 변수입니다.</param>
+    public static TaskResult BuildOutput(ChestParams cp, out string output) {
         output = null;
         string extension;
         extension = cp.Encrypt ? ".dcf" : "";
@@ -104,6 +111,10 @@ static class FileHelper {
         }
         return TaskResult.Success;
     }
+    /// <summary>
+    /// 파일을 삭제합니다. 파일 삭제 도중 발생하는 오류를 무시합니다.
+    /// </summary>
+    /// <param name="fileName">삭제할 파일입니다.</param>
     public static void DeleteFileIgnoreErrors(string fileName) {
         try { File.Delete(fileName); }
         catch { }
