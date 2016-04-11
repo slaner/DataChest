@@ -63,10 +63,19 @@ class Program {
             if (opt.In.Count == 0)
                 return SetError(TaskResult.NoInputFiles);
 
+            // API 버전이 설정되지 않은 경우 ChestAPI.Version 으로 설정한다.
+            if (opt.APIVersion == 0)
+                opt.APIVersion = ChestAPI.Version;
+            else {
+                // 지원하는 버전보다 높은 버전일 경우
+                if (opt.APIVersion > ChestAPI.Version)
+                    return SetError(TaskResult.NotSupportedVersion);
+            }
+
             // 헤더 정보 표시
-            if(opt.ShowHeaderInfo) {
+            if (opt.ShowHeaderInfo) {
                 HeaderBase hdr;
-                r = HeaderBase.FromFile(opt.In[0], out hdr);
+                r = HeaderBase.FromFileWithVersion(opt.In[0], opt.APIVersion, out hdr);
                 if (r != TaskResult.Success)
                     return SetError(r);
                 
@@ -89,15 +98,6 @@ class Program {
             // 알고리즘 검사
             if (opt.Algorithm >= Algorithms.LastMethod)
                 return SetError(TaskResult.InvalidAlgorithm);
-
-            // API 버전이 설정되지 않은 경우 ChestAPI.Version 으로 설정한다.
-            if (opt.APIVersion == 0)
-                opt.APIVersion = ChestAPI.Version;
-            else {
-                // 지원하는 버전보다 높은 버전일 경우
-                if (opt.APIVersion > ChestAPI.Version)
-                    return SetError(TaskResult.NotSupportedVersion);
-            }
 
             // 테스트 옵션이 켜진 경우
             if (opt.RunTest) {
@@ -127,7 +127,8 @@ class Program {
             cp.SetIV(opt.IV);
             cp.SetPassword(opt.Password);
             cp.InputFile = opt.In[0];
-            
+            cp.Comment = opt.Comment;
+
             r = ChestAPI.Invoke(cp);
             return SetError(r);
         }
@@ -151,9 +152,10 @@ class Program {
         Console.WriteLine("프로그램 정보:");
         Console.WriteLine("  " + header);
         Console.WriteLine("  " + copyright);
+        Console.WriteLine("  API Version: " + ChestAPI.Version);
         Console.WriteLine();
         Console.WriteLine("라이센스 정보:");
-        Console.WriteLine("  MIT License");
+        Console.WriteLine("  GPLv2");
         Console.WriteLine();
         Console.WriteLine("사용 라이브러리:");
         Console.WriteLine("  CommandLine");
