@@ -24,8 +24,8 @@ using System.IO;
 /// ChestAPI 호출에 필요한 정보를 저장하는 클래스입니다.
 /// </summary>
 sealed class ChestParams {
-    const string PhraseFileLookupPrefix = "FF:";
-    const string PhrasePlainTextPrefix = "FT:";
+    public const string PhraseFileLookupPrefix = "FF:";
+    public const string PhrasePlainTextPrefix = "FT:";
 
 
     string g_password;          // Password for file

@@ -102,12 +102,12 @@ class ChestAPIOptions {
         help.AddOptions(this);
         help.AddPostOptionsLine("*\t-V, --apiversion 옵션을 제외한 모든 옵션은 무시됩니다.");
         help.AddPostOptionsLine("**\t기본적으로 파일을 먼저 찾고, 파일이 존재하지 않는 경우 문자열 자체를 암호로 사용합니다.");
-        help.AddPostOptionsLine("\t단, K: 또는 F:로 시작하는 경우 해당 규칙에 맞게 설정합니다.");
-        help.AddPostOptionsLine("\tK: 는 문자열을 암호로 사용하고, F: 는 파일을 찾습니다.");
-        help.AddPostOptionsLine("\tF: 를 사용할 때 파일이 없으면 오류가 발생합니다.");
+        help.AddPostOptionsLine("\t단, " + ChestParams.PhrasePlainTextPrefix + " 또는 " + ChestParams.PhraseFileLookupPrefix + "로 시작하는 경우 해당 규칙에 맞게 설정합니다.");
+        help.AddPostOptionsLine("\t" + ChestParams.PhrasePlainTextPrefix + " 는 문자열을 암호로 사용하고, " + ChestParams.PhraseFileLookupPrefix + " 는 파일을 찾습니다.");
+        help.AddPostOptionsLine("\t" + ChestParams.PhraseFileLookupPrefix + " 를 사용할 때 파일이 없으면 오류가 발생합니다.");
         help.AddPostOptionsLine("\t예)");
-        help.AddPostOptionsLine("\tK:PassPhrase = PassPhrase 라는 문자열을 암호로 사용");
-        help.AddPostOptionsLine("\tF:C:\\phrase.bin = C:\\phrase.bin 이라는 파일의 내용을 암호로 사용" + Environment.NewLine);
+        help.AddPostOptionsLine("\t" + ChestParams.PhrasePlainTextPrefix + "PassPhrase = PassPhrase 라는 문자열을 암호로 사용");
+        help.AddPostOptionsLine("\t" + ChestParams.PhraseFileLookupPrefix + "C:\\phrase.bin = C:\\phrase.bin 이라는 파일의 내용을 암호로 사용" + Environment.NewLine);
         return help;
         #endregion
         #region via StringBuilder, hand work(manual)
