@@ -19,11 +19,13 @@
 
 using System;
 using System.IO;
+using DataChest.Types;
 
-/// <summary>
-/// ChestAPI 호출에 필요한 정보를 저장하는 클래스입니다.
-/// </summary>
-sealed class ChestParams {
+namespace DataChest {
+    /// <summary>
+    /// ChestAPI 호출에 필요한 정보를 저장하는 클래스입니다.
+    /// </summary>
+    sealed class ChestParams {
     public const string PhraseFileLookupPrefix = "FF:";
     public const string PhrasePlainTextPrefix = "FT:";
 
@@ -317,4 +319,5 @@ sealed class ChestParams {
         set { g_cleanup = value; }
     }
 
+}
 }

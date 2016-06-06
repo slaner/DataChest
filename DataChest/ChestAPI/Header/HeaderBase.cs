@@ -20,11 +20,13 @@
 using System;
 using System.IO;
 using System.Reflection;
+using DataChest.Types;
 
-/// <summary>
-/// ChestAPI 파일 형식에서 사용하는 헤더의 기본 모델입니다.
-/// </summary>
-class HeaderBase : IHeader {
+namespace DataChest {
+    /// <summary>
+    /// ChestAPI 파일 형식에서 사용하는 헤더의 기본 모델입니다.
+    /// </summary>
+    class HeaderBase : IHeader {
     /// <summary>
     /// 초기 버전(1) 헤더의 크기입니다.
     /// </summary>
@@ -312,4 +314,5 @@ class HeaderBase : IHeader {
     public ulong RSize {
         get { return g_rsize; }
     }
+}
 }

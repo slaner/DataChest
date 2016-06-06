@@ -8,3 +8,8 @@
 # Ignore all output / object files
 DataChest/bin
 DataChest/obj
+
+# Ignore GUI directory; temporary ignored
+# Ignore solution file; temporary
+*.sln
+DataChest-GUI

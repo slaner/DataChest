@@ -18,12 +18,14 @@
 */
 
 using System.Collections.Generic;
+using DataChest.Types;
 
-static class ErrorFormatter {
-    static readonly Dictionary<int, string> m_errorDict = new Dictionary<int, string>() {
+namespace DataChest {
+    static class ErrorFormatter {
+        static readonly Dictionary<int, string> m_errorDict = new Dictionary<int, string>() {
         {0, "작업이 성공했습니다."},
         {1, "파일이 이미 존재합니다."},
-        
+
         {10, "데이터가 없습니다."},
         {11, "초기 벡터(IV)가 없습니다."},
         {12, "입력 파일이 없습니다."},
@@ -51,7 +53,7 @@ static class ErrorFormatter {
         {60, "파일을 찾을 수 없습니다."},
         {61, "디렉터리를 찾을 수 없습니다."},
         {62, "접근이 거부되었습니다."},
-        
+
         {70, "지원되지 않는 버전입니다."},
         {71, "모호한 옵션입니다."},
 
@@ -65,11 +67,12 @@ static class ErrorFormatter {
         {130, "사용자 정의 처리 루틴(UDPR, User Defined Processing Routine)에서 오류가 발생했습니다."},
     };
 
-    public static string GetErrorMessageFromTaskResult(TaskResult r) {
-        int code = (int)r;
-        if (m_errorDict.ContainsKey(code))
-            return m_errorDict[code];
-        else
-            return "알려지지 않은 오류입니다.";
+        public static string GetErrorMessageFromTaskResult(TaskResult r) {
+            int code = (int)r;
+            if (m_errorDict.ContainsKey(code))
+                return m_errorDict[code];
+            else
+                return "알려지지 않은 오류입니다.";
+        }
     }
 }

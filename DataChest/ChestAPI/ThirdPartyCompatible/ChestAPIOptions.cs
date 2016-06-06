@@ -21,11 +21,13 @@ using System;
 using System.Collections.Generic;
 using CommandLine;
 using CommandLine.Text;
+using DataChest.Types;
 
-/// <summary>
-/// ChestAPI CLI 옵션을 정의하는 클래스입니다.
-/// </summary>
-class ChestAPIOptions {
+namespace DataChest {
+    /// <summary>
+    /// ChestAPI 옵션을 정의하는 클래스입니다.
+    /// </summary>
+    class ChestAPIOptions {
     [Option('a', "algorithm", HelpText = "사용할 알고리즘을 설정합니다.", Required = false, MetaValue = "<alg>")]
     public Algorithms Algorithm { get; set; }
 
@@ -43,7 +45,7 @@ class ChestAPIOptions {
 
     [Option('D', "disableverify", HelpText = "체크섬 검증을 비활성화합니다.", Required = false)]
     public bool DisableVerification { get; set; }
-    
+
     [Option('i', "infoheader", HelpText = "* 파일의 CHEST_HEADER 정보를 표시합니다.", Required = false)]
     public bool ShowHeaderInfo { get; set; }
 
@@ -168,4 +170,5 @@ class ChestAPIOptions {
     static string FormatOptions(char shortName, string longName, string description) {
         return string.Format("    -{0,-26} {1}", shortName + ", --" + longName, description);
     }
+}
 }

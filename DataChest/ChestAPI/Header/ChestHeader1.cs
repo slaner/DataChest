@@ -17,10 +17,11 @@
   along with DataChest.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/// <summary>
-/// ChestAPI 파일 형식에서 사용하는 버전 1 헤더입니다.
-/// </summary>
-class ChestHeader1 : HeaderBase {
+namespace DataChest {
+    /// <summary>
+    /// ChestAPI 파일 형식에서 사용하는 버전 1 헤더입니다.
+    /// </summary>
+    class ChestHeader1 : HeaderBase {
     public ChestHeader1() : base(1) { }
 
     /// <summary>
@@ -30,4 +31,5 @@ class ChestHeader1 : HeaderBase {
     public override ushort HeaderVersion {
         get { return 1; }
     }
+}
 }

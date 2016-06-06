@@ -19,53 +19,55 @@
 
 using System;
 
-/// <summary>
-/// ChestAPI 헤더를 구현합니다.
-/// </summary>
-interface IHeader {
+namespace DataChest {
     /// <summary>
-    /// 시그니쳐를 가져옵니다.
+    /// ChestAPI 헤더를 구현합니다.
     /// </summary>
-    ushort Signature { get; }
+    interface IHeader {
+        /// <summary>
+        /// 시그니쳐를 가져옵니다.
+        /// </summary>
+        ushort Signature { get; }
 
-    /// <summary>
-    /// 버전을 가져옵니다.
-    /// </summary>
-    ushort Version { get; }
-    
-    /// <summary>
-    /// 사용되지 않습니다.
-    /// </summary>
-    [Obsolete()]
-    uint Unused { get; }
+        /// <summary>
+        /// 버전을 가져옵니다.
+        /// </summary>
+        ushort Version { get; }
 
-    /// <summary>
-    /// 헤더의 체크섬을 가져옵니다.
-    /// </summary>
-    uint HChecksum { get; }
+        /// <summary>
+        /// 사용되지 않습니다.
+        /// </summary>
+        [Obsolete()]
+        uint Unused { get; }
 
-    /// <summary>
-    /// 암호화된 데이터의 체크섬을 가져옵니다.
-    /// </summary>
-    uint EChecksum { get; }
+        /// <summary>
+        /// 헤더의 체크섬을 가져옵니다.
+        /// </summary>
+        uint HChecksum { get; }
 
-    /// <summary>
-    /// 원본 데이터의 체크섬을 가져옵니다.
-    /// </summary>
-    uint RChecksum { get; }
+        /// <summary>
+        /// 암호화된 데이터의 체크섬을 가져옵니다.
+        /// </summary>
+        uint EChecksum { get; }
 
-    /// <summary>
-    /// 헤더의 크기를 가져옵니다.
-    /// </summary>
-    ushort HSize { get; }
+        /// <summary>
+        /// 원본 데이터의 체크섬을 가져옵니다.
+        /// </summary>
+        uint RChecksum { get; }
 
-    /// <summary>
-    /// 암호화된 데이터의 크기를 가져옵니다.
-    /// </summary>
-    ulong ESize { get; }
+        /// <summary>
+        /// 헤더의 크기를 가져옵니다.
+        /// </summary>
+        ushort HSize { get; }
 
-    /// <summary>
-    /// 원본 데이터의 크기를 가져옵니다.
-    /// </summary>
-    ulong RSize { get; }
+        /// <summary>
+        /// 암호화된 데이터의 크기를 가져옵니다.
+        /// </summary>
+        ulong ESize { get; }
+
+        /// <summary>
+        /// 원본 데이터의 크기를 가져옵니다.
+        /// </summary>
+        ulong RSize { get; }
+    }
 }
