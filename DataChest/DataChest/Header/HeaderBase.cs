@@ -53,7 +53,7 @@ namespace DataChest {
         ulong g_rsize;
         
         /// <summary>
-        /// 지정된 헤더 버전을 갖는 <see cref="HeaderBase" /> 클래스의 새 개체를 만듭니다.<br />
+        /// 지정된 헤더 버전을 갖는 <see cref="HeaderBase"/> 클래스의 새 개체를 만듭니다.<br />
         /// Create a new instance of <see cref="HeaderBase"/> class having specified header version.
         /// </summary>
         /// <param name="headerVersion">
@@ -84,7 +84,7 @@ namespace DataChest {
         void TraverseProperty(int depth, StringBuilder sb, HeaderBase root, object parent, PropertyInfo property) {
             Type baseType = property.PropertyType;
             object value = parent != null ? property.GetValue(parent, null) : property.GetValue(root, null);
-            if (value == root || value == parent) return;
+            if (parent != null && (value == root || value == parent)) return;
 
             if (value != null) {
                 Type valueType = value.GetType();
@@ -117,15 +117,15 @@ namespace DataChest {
 
         /// <summary>
         /// 기본 필드가 아닌 상위 버전의 헤더에서 추가된 필드를 배열로 변환하는 작업을 처리하는 함수입니다.
-        /// 추가된 필드는 <see cref="ProcessArray(BinaryWriter)" /> 메서드의 매개변수를 이용하여 <see cref="BinaryWriter" />.Write() 메서드를 호출하여야 합니다.
+        /// 추가된 필드는 <see cref="ProcessArray(BinaryWriter)"/> 메서드의 매개변수를 이용하여 <see cref="BinaryWriter"/>.Write() 메서드를 호출하여야 합니다.
         /// </summary>
-        /// <param name="bw">필드의 내용을 기록할 <see cref="BinaryWriter" /> 개체입니다.</param>
+        /// <param name="bw">필드의 내용을 기록할 <see cref="BinaryWriter"/> 개체입니다.</param>
         protected virtual void ProcessArray(BinaryWriter bw) { }
         /// <summary>
         /// 기본 필드가 아닌 상위 버전의 헤더에서 추가된 필드를 가진 헤더를 스트림에서 읽어오는 작업을 처리하는 함수입니다.
-        /// 추가된 필드는 <see cref="ProcessStream(BinaryReader)" /> 메서드의 매개변수를 이용하여 <see cref="BinaryReader" />.Read...() 메서드를 호출하여야 합니다.
+        /// 추가된 필드는 <see cref="ProcessStream(BinaryReader)"/> 메서드의 매개변수를 이용하여 <see cref="BinaryReader"/>.Read...() 메서드를 호출하여야 합니다.
         /// </summary>
-        /// <param name="br">필드의 내용을 읽어올 <see cref="BinaryReader" /> 개체입니다.</param>
+        /// <param name="br">필드의 내용을 읽어올 <see cref="BinaryReader"/> 개체입니다.</param>
         protected internal virtual void ProcessStream(BinaryReader br) { }
         /// <summary>
         /// 기본 필드의 내용을 읽어오는 작업을 수행하는 함수입니다.<br />
@@ -195,7 +195,7 @@ namespace DataChest {
         /// <summary>
         /// 암호화 작업에 대한 필드의 값을 설정합니다.
         /// </summary>
-        /// <param name="s">암호화할 데이터가 저장되어 있는 <see cref="Stream" /> 개체입니다.</param>
+        /// <param name="s">암호화할 데이터가 저장되어 있는 <see cref="Stream"/> 개체입니다.</param>
         /// <param name="b">암호화된 데이터가 저장된 바이트 배열입니다.</param>
         public TaskResult AssignBasicInformationEncrypt(Stream s, byte[] b) {
             g_rsize = (ulong)s.Length;
