@@ -8,6 +8,7 @@ namespace DataChest {
     /// Defining functions that performing create header and read header from stream.
     /// </summary>
     static class HeaderManager {
+        public static ushort NewerVersion = 0;
         static readonly Dictionary<ushort, Type> m_headers = new Dictionary<ushort, Type>();
 
         /// <summary>
@@ -27,6 +28,7 @@ namespace DataChest {
             if (m_headers.ContainsKey(version)) return;
             if (m_headers.ContainsValue(t)) return;
             m_headers.Add(version, t);
+            if (version > NewerVersion) NewerVersion = version;
         }
 
         /// <summary>
