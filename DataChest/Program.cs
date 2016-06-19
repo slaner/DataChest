@@ -39,33 +39,14 @@ namespace DataChest {
             AssemblyVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString();
         }
 
-        struct Node {
-            public object Owner { get; set; }
-            public int LinkDepth { get; set; }
-            public object Data { get; set; }
-        }
-        class TEST : HeaderBase {
-            Node n;
-            public TEST() : base(7) {
-                n = new Node();
-                n.Owner = this;
-                n.LinkDepth = 0;
-                n.Data = new Node() {
-                    Owner = n,
-                    LinkDepth = 1,
-                    Data = n
-                };
-            }
-
-            public Node Node {
-                get { return n; }
-            }
-        }
-        
         static int Main(string[] args) {
             var option = new Option();
-            if (args.Length == 0 || !Parser.Default.ParseArguments(args, option)) {
+            if (args.Length == 0) {
                 Console.WriteLine(option.GetUsage());
+                return 0;
+            }
+
+            if (!Parser.Default.ParseArguments(args, option)) {
                 return (int)TaskResult.InvalidParameter;
             }
 
@@ -75,12 +56,13 @@ namespace DataChest {
             if (option.ShowAlgorithmList) {
                 return ShowAlgorithmList();
             }
-
+            
             DataChest dc = new DataChest(option);
-            int result = (int) dc.Process();
-            if (result == (int) TaskResult.InvalidParameter) Console.WriteLine(option.GetUsage());
+            TaskResult result = dc.Process();
+            if (result == TaskResult.InvalidParameter) Console.WriteLine(option.GetUsage());
             dc.Dispose();
-            return result;
+            Console.WriteLine("RESULT: {0} ({1})", result, (int)result);
+            return (int) result;
         }
 
         static int ShowVersionInfo() {
