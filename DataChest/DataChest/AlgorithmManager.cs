@@ -70,18 +70,6 @@ namespace DataChest {
         static readonly Dictionary<int, Type> g_algorithms = new Dictionary<int, Type>();
         static readonly Type BaseAlgorithm = typeof(SymmetricAlgorithm);
 
-        static AlgorithmManager() {
-            // 이 곳에서 DefineAlgorithm(int, Type) 함수를 이용하여
-            // DataChest 프로그램에서 지원하는 대칭 키 암호화 알고리즘을 추가합니다.
-            // Add algorithms that supported DataChest application by DefineAlgorithm(int, Type) function.
-
-            DefineAlgorithm((int)Algorithms.Aes, typeof(AesCryptoServiceProvider));
-            DefineAlgorithm((int)Algorithms.Des, typeof(DESCryptoServiceProvider));
-            DefineAlgorithm((int)Algorithms.TripleDes, typeof(TripleDESCryptoServiceProvider));
-            DefineAlgorithm((int)Algorithms.Rc2, typeof(RC2CryptoServiceProvider));
-        }
-
-
         /// <summary>
         /// 사용할 수 있는 알고리즘을 정의합니다.<br />
         /// Define algorithms available.
@@ -98,9 +86,19 @@ namespace DataChest {
             if (id < 0) return;
             if (t == null) return;
             if (g_algorithms.ContainsKey(id)) return;
-            if (t.BaseType != BaseAlgorithm) return;
+            if (!t.IsSubclassOf(BaseAlgorithm)) return;
 
             g_algorithms.Add(id, t);
+        }
+        static AlgorithmManager() {
+            // 이 곳에서 DefineAlgorithm(int, Type) 함수를 이용하여
+            // DataChest 프로그램에서 지원하는 대칭 키 암호화 알고리즘을 추가합니다.
+            // Add algorithms that supported DataChest application by DefineAlgorithm(int, Type) function.
+
+            DefineAlgorithm((int)Algorithms.Aes, typeof(AesCryptoServiceProvider));
+            DefineAlgorithm((int)Algorithms.Des, typeof(DESCryptoServiceProvider));
+            DefineAlgorithm((int)Algorithms.TripleDes, typeof(TripleDESCryptoServiceProvider));
+            DefineAlgorithm((int)Algorithms.Rc2, typeof(RC2CryptoServiceProvider));
         }
 
         /// <summary>
