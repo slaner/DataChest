@@ -11,6 +11,7 @@
     <AssemblyName>dc</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
     <PublishUrl>게시\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -23,7 +24,6 @@
     <MapFileExtensions>true</MapFileExtensions>
     <ApplicationRevision>0</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
-    <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
@@ -70,9 +70,10 @@
     <Compile Include="DataChest\Header\HeaderManager.cs" />
     <Compile Include="DataChest\Header\IHeader.cs" />
     <Compile Include="DataChest\Helper\FileHelper.cs" />
+    <Compile Include="DataChest\Helper\IDHelper.cs" />
     <Compile Include="DataChest\Helper\UnitHelper.cs" />
     <Compile Include="DataChest\Performance\PerformanceLogger.cs" />
-    <Compile Include="DataChest\SupportedAlgorithms.cs" />
+    <Compile Include="DataChest\AlgorithmManager.cs" />
     <Compile Include="DataChest\ThirdPartyCompatible\Options.cs" />
     <Compile Include="DataChest\TaskResult.cs" />
     <Compile Include="CommandLine\Attributes\AssemblyLicenseAttribute.cs" />
