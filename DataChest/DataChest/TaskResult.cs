@@ -33,18 +33,17 @@ namespace DataChest {
         NoData = 10,
         NoIV = 11,
         NoInputFile = 12,
-        
+
         InvalidAlgorithm = 40,
         InvalidSignature,
         InvalidHeaderFieldValue,
         InvalidHeader,
         InvalidVersion,
-        InvalidPassword,
+        InvalidPasswordOrDataCorrupted,
         InvalidIV,
         InvalidBufferSize,
         InvalidHeaderClass,
-        InvalidPhrasePrefix,
-        
+
         AlgorithmInitiateFailure = 70,
         IOError,
         EncodingError,
@@ -55,21 +54,21 @@ namespace DataChest {
         OutOfMemory,
         PathTooLong,
         AccessDenied,
-        
+
         FileNotFound = 90,
         FileAlreadyExists,
         DirectoryNotFound,
 
         NotSupportedVersion = 100,
         AmbiguousOption,
-        
+
         IncorrectHeaderChecksum = 110,
         IncorrectRawDataChecksum,
         IncorrectEncryptedDataChecksum,
-        
+
         CannotCreateHeaderInstance = 120,
         HeaderVersionNotMatch,
-        
+
         ErrorCausedUDPR = 130,
     }
 }
