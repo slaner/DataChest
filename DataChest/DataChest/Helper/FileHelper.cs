@@ -19,18 +19,25 @@
 
 using System;
 using System.IO;
-using DataChest.Types;
 
 namespace DataChest {
     /// <summary>
-    /// 파일 작업을 간편화해놓은 함수를 노출하는 클래스입니다.
+    /// 파일 작업을 간편화해놓은 함수를 노출하는 클래스입니다.<br />
+    /// Exposes function that simplify file tasks.
     /// </summary>
     static class FileHelper {
         /// <summary>
-        /// 지정한 파일에 대한 파일 스트림을 엽니다.
+        /// 지정한 파일에 대한 파일 스트림을 엽니다.<br />
+        /// Open a file stream for specified file.
         /// </summary>
-        /// <param name="fileName">열 파일입니다.</param>
-        /// <param name="fs">열린 파일의 스트림이 저장될 변수입니다.</param>
+        /// <param name="fileName">
+        /// 열 파일입니다.<br />
+        /// File name to open.
+        /// </param>
+        /// <param name="fs">
+        /// 열린 파일의 스트림이 저장될 변수입니다.<br />
+        /// A variable to store file stream.
+        /// </param>
         public static TaskResult OpenFileStream(string fileName, out FileStream fs) {
             fs = null;
             try {
@@ -51,32 +58,39 @@ namespace DataChest {
             return TaskResult.Success;
         }
         /// <summary>
-        /// 출력 경로를 만듭니다.
+        /// 출력 경로를 만듭니다.<br />
+        /// Build an output path.
         /// </summary>
-        /// <param name="cp">출력 경로를 만드는데 참고할 <see cref="ChestParams" /> 개체입니다.</param>
-        /// <param name="output">만들어진 출력 경로가 저장될 변수입니다.</param>
-        public static TaskResult BuildOutput(ChestParams cp, out string output) {
+        /// <param name="option">
+        /// 출력 경로를 만드는데 참고할 <see cref="Option"/> 개체입니다.<br />
+        /// <see cref="Option"/> instance to reference when build output path.
+        /// </param>
+        /// <param name="output">
+        /// 만들어진 출력 경로가 저장될 변수입니다.<br />
+        /// A variable to store output path.
+        /// </param>
+        public static TaskResult BuildOutput(Option option, out string output) {
             output = null;
             string extension;
-            extension = cp.Encrypt ? ".dcf" : "";
-            if (string.IsNullOrEmpty(cp.OutputFile))
-                output = Environment.CurrentDirectory + "/" + Path.GetFileNameWithoutExtension(cp.InputFile) + extension;
+            extension = option.Decrypt ? string.Empty : ".dcf";
+            if (string.IsNullOrEmpty(option.Out))
+                output = Environment.CurrentDirectory + "/" + Path.GetFileNameWithoutExtension(option.In[0]) + extension;
             else {
                 // 확장자가 있는지 없는지 확인한다.
-                string filename = Path.GetFileName(cp.OutputFile);
+                string filename = Path.GetFileName(option.Out);
                 string ext = Path.GetExtension(filename);
 
                 // 파일명이 없는 경우
                 if (string.IsNullOrEmpty(filename))
-                    filename = Path.GetFileNameWithoutExtension(cp.InputFile) + extension;
+                    filename = Path.GetFileNameWithoutExtension(option.In[0]) + extension;
 
                 // 파일명은 있는데 확장자가 dcf 가 아니거나 없는 경우
                 else
-                    if (cp.Encrypt && (string.IsNullOrEmpty(ext) || !ext.Equals(".dcf", StringComparison.InvariantCultureIgnoreCase)))
+                    if (!option.Decrypt && (string.IsNullOrEmpty(ext) || !ext.Equals(".dcf", StringComparison.InvariantCultureIgnoreCase)))
                     filename += extension;
 
                 // 디렉터리 정보를 가져온다.
-                string dir = Path.GetDirectoryName(cp.OutputFile);
+                string dir = Path.GetDirectoryName(option.Out);
 
                 // 디렉터리 정보가 없음 (파일명만 있는 경우)
                 if (string.IsNullOrEmpty(dir))
@@ -114,9 +128,13 @@ namespace DataChest {
             return TaskResult.Success;
         }
         /// <summary>
-        /// 파일을 삭제합니다. 파일 삭제 도중 발생하는 오류를 무시합니다.
+        /// 파일을 삭제합니다. 파일 삭제 도중 발생하는 오류를 무시합니다.<br />
+        /// Delete a file. Ignore all exceptions thrown during file deletion.
         /// </summary>
-        /// <param name="fileName">삭제할 파일입니다.</param>
+        /// <param name="fileName">
+        /// 삭제할 파일입니다.<br />
+        /// File to delete.
+        /// </param>
         public static void DeleteFileIgnoreErrors(string fileName) {
             try { File.Delete(fileName); } catch { }
         }

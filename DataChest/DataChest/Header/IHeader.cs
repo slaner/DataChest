@@ -21,7 +21,8 @@ using System;
 
 namespace DataChest {
     /// <summary>
-    /// ChestAPI 헤더를 구현합니다.
+    /// DataChest 파일에서 사용하는 헤더의 기본 속성을 구현합니다.<br />
+    /// Implements base properties of header used in DCF(DataChest File).
     /// </summary>
     interface IHeader {
         /// <summary>

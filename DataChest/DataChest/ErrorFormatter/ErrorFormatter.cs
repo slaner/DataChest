@@ -18,7 +18,6 @@
 */
 
 using System.Collections.Generic;
-using DataChest.Types;
 
 namespace DataChest {
     static class ErrorFormatter {

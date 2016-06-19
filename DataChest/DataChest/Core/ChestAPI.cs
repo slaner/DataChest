@@ -18,11 +18,11 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
-using DataChest.Types;
 
 namespace DataChest {
     /// <summary>
@@ -40,11 +40,11 @@ namespace DataChest {
         /// 이 때 사용된 IV는 0으로 채워진 바이트 배열이 사용되었습니다.
         /// </summary>
         public static readonly byte[] DefaultIV = {
-        0xBF, 0x67, 0x8B, 0x27, 0xDC, 0xDE, 0x98, 0xB9,
-        0xDD, 0x44, 0x77, 0x13, 0x85, 0x08, 0xB5, 0x58,
-        0x20, 0x58, 0xE6, 0x6F, 0x5E, 0x0F, 0x66, 0x90,
-        0x3E, 0x9E, 0x11, 0xB3, 0xC1, 0x04, 0x11, 0x2E,
-    };
+            0xBF, 0x67, 0x8B, 0x27, 0xDC, 0xDE, 0x98, 0xB9,
+            0xDD, 0x44, 0x77, 0x13, 0x85, 0x08, 0xB5, 0x58,
+            0x20, 0x58, 0xE6, 0x6F, 0x5E, 0x0F, 0x66, 0x90,
+            0x3E, 0x9E, 0x11, 0xB3, 0xC1, 0x04, 0x11, 0x2E,
+        };
         /// <summary>
         /// ChestAPI 버전을 나타냅니다.
         /// </summary>
@@ -54,6 +54,11 @@ namespace DataChest {
         /// </summary>
         public static int BufferSize = 4096;
 
+
+
+        static ChestAPI() {
+
+        }
 
         /// <summary>
         /// 암복호화 API 호출에 필요한 정보를 저장하고 있는 <see cref="ChestParams" /> 개체를 이용하여 암복호화 API를 호출합니다.
@@ -332,7 +337,6 @@ namespace DataChest {
             // 작업 끝
             return r;
         }
-
         /// <summary>
         /// <see cref="ChestParams" /> 개체로부터 <see cref="SymmetricAlgorithm" /> 개체를 생성하고 초기화합니다.
         /// </summary>
@@ -399,119 +403,7 @@ namespace DataChest {
                     return null;
             }
         }
-        /// <summary>
-        /// <see cref="Stream"/> 개체의 데이터를 암호화합니다.
-        /// </summary>
-        /// <param name="s">데이터를 암호화할 <see cref="Stream" /> 개체입니다.</param>
-        /// <param name="sa">데이터 암호화에 사용되는 <see cref="SymmetricAlgorithm" /> 개체입니다.</param>
-        /// <param name="result">암호화된 데이터가 저장되는 <see cref="byte" /> 배열입니다.</param>
-        static TaskResult Encrypt(Stream s, SymmetricAlgorithm sa, out byte[] result) {
-            result = null;
-            MemoryStream ms = new MemoryStream();
 
-            ICryptoTransform ct = sa.CreateEncryptor();
-            using (CryptoStream cs = new CryptoStream(ms, ct, CryptoStreamMode.Write)) {
-                byte[] temp;
-
-                // 배열 선언
-                try { temp = new byte[BufferSize]; }
-
-                // 예외가 발생하면 100% 메모리 부족 예외다.
-                catch {
-                    ct.Dispose();
-                    ms.Dispose();
-                    return TaskResult.OutOfMemory;
-                }
-
-                // 읽은 데이터의 크기를 저장할 변수 선언
-                int nRead;
-
-                // 버퍼만큼 읽어온다.
-                try { nRead = s.Read(temp, 0, BufferSize); }
-
-                // 예외가 발생한 경우, CryptoStream 및 ICryptoTransform 개체를 해제하고 종료한다.
-                catch {
-                    ct.Dispose();
-                    return TaskResult.StreamReadError;
-                }
-
-                // 읽은 데이터의 크기가 1 이상 (데이터가 있음)
-                while (nRead > 0) {
-                    // 상황별 예외처리
-                    try { cs.Write(temp, 0, nRead); } catch {
-                        ct.Dispose();
-                        return TaskResult.StreamWriteError;
-                    }
-
-                    try { nRead = s.Read(temp, 0, BufferSize); } catch {
-                        ct.Dispose();
-                        return TaskResult.StreamReadError;
-                    }
-                }
-            }
-
-            result = ms.ToArray();
-            return TaskResult.Success;
-        }
-        /// <summary>
-        /// <see cref="Stream"/> 개체의 데이터를 복호화합니다.
-        /// </summary>
-        /// <param name="s">데이터를 복호화할 <see cref="Stream" /> 개체입니다.</param>
-        /// <param name="sa">데이터 복호화에 사용되는 <see cref="SymmetricAlgorithm" /> 개체입니다.</param>
-        /// <param name="result">복호화된 데이터가 저장되는 <see cref="byte" /> 배열입니다.</param>
-        static TaskResult Decrypt(Stream s, SymmetricAlgorithm sa, out byte[] result) {
-            result = null;
-
-            // 복호화된 데이터를 저장할 스트림 생성
-            MemoryStream ms = new MemoryStream();
-
-            // 복호화기 생성
-            ICryptoTransform ct = sa.CreateDecryptor();
-
-            using (CryptoStream cs = new CryptoStream(s, ct, CryptoStreamMode.Read)) {
-                byte[] temp;
-
-                // 배열 선언
-                try { temp = new byte[BufferSize]; }
-
-                // 예외가 발생하면 100% 메모리 부족 예외다.
-                catch {
-                    SafeDisposeCryptoStream(cs);
-                    ct.Dispose();
-                    return TaskResult.OutOfMemory;
-                }
-
-                // 읽은 데이터의 크기를 저장할 변수 선언
-                int nRead;
-
-                // 버퍼만큼 읽어온다.
-                try { nRead = cs.Read(temp, 0, BufferSize); }
-
-                // 예외가 발생한 경우, CryptoStream 및 ICryptoTransform 개체를 해제하고 종료한다.
-                catch {
-                    SafeDisposeCryptoStream(cs);
-                    ct.Dispose();
-                    return TaskResult.StreamReadError;
-                }
-
-                // 읽은 데이터의 크기가 1 이상 (데이터가 있음)
-                while (nRead > 0) {
-                    try {
-                        ms.Write(temp, 0, nRead);
-                        nRead = cs.Read(temp, 0, BufferSize);
-                    } catch {
-                        SafeDisposeCryptoStream(cs);
-                        ct.Dispose();
-                        return TaskResult.StreamReadError;
-                    }
-                }
-            }
-
-            result = ms.ToArray();
-            ct.Dispose();
-            ms.Dispose();
-            return TaskResult.Success;
-        }
         /// <summary>
         /// <see cref="CryptographicException" /> 예외가 발생하지 않도록 안전하게 <see cref="CryptoStream"/> 개체에서 사용하는 모든 리소스를 해제합니다.
         /// </summary>
@@ -539,10 +431,11 @@ namespace DataChest {
                 // 변수 정보를 가져오지 못한 경우 그냥 종료한다.
                 else return;
     
-            // 값을 설정했으니 다시 Dispose를 호출한다.
+                // 값을 설정했으니 다시 Dispose를 호출한다.
                 cs.Dispose();
             }
         }
+
         /// <summary>
         /// <see cref="IDisposable" /> 인터페이스를 구현하는 개체를 메모리에서 해제합니다.
         /// </summary>
@@ -551,13 +444,6 @@ namespace DataChest {
             foreach (IDisposable dis in obj) {
                 dis.Dispose();
             }
-        }
-
-        /// <summary>
-        /// DataChest GUI에서 프로그램을 식별하기 위한 메서드입니다.
-        /// </summary>
-        static string GetGUIIdentifier() {
-            return Convert.ToBase64String(DefaultIV);
         }
     }
 }
