@@ -28,27 +28,19 @@ namespace DataChest {
         // System compatible code
         InvalidParameter = 87,
 
-        CleanupFailedSucceed = 1,
+        SucceedButCleanupFailed = 1,
 
-        NoData = 10,
-        NoIV = 11,
-        NoInputFile = 12,
+        NoInputFile = 10,
 
         InvalidAlgorithm = 40,
         InvalidSignature,
         InvalidHeaderFieldValue,
-        InvalidHeader,
-        InvalidVersion,
         InvalidPasswordOrDataCorrupted,
-        InvalidIV,
         InvalidBufferSize,
         InvalidHeaderClass,
-
-        AlgorithmInitiateFailure = 70,
+        
         IOError,
         EncodingError,
-        FileOpenError,
-        StreamError,
         StreamReadError,
         StreamWriteError,
         OutOfMemory,
@@ -65,9 +57,8 @@ namespace DataChest {
         IncorrectHeaderChecksum = 110,
         IncorrectRawDataChecksum,
         IncorrectEncryptedDataChecksum,
-
-        CannotCreateHeaderInstance = 120,
-        HeaderVersionNotMatch,
+        
+        HeaderVersionNotMatch = 120,
 
         ErrorCausedUDPR = 130,
     }
