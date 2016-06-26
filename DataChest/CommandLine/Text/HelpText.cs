@@ -699,6 +699,7 @@ namespace CommandLine.Text
                 optionName.ToString());
 
             this._optionsHelp.Append("    ");
+            option.HelpText = DataChest.SR.GetString(option.HelpText);
             if (option.HasDefaultValue)
             {
                 option.HelpText = "(Default: {0}) ".FormatLocal(option.DefaultValue) + option.HelpText;
@@ -756,7 +757,7 @@ namespace CommandLine.Text
                 }
                 while (option.HelpText.Length > widthOfHelpText);
             }
-
+            
             this._optionsHelp.Append(option.HelpText);
             this._optionsHelp.Append(Environment.NewLine);
             if (_additionalNewLineAfterOption)
