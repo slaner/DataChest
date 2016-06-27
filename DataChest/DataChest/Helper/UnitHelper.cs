@@ -92,5 +92,40 @@ namespace DataChest {
 
             return string.Format("{0:F} {1}/s", measured, ds.ToString());
         }
+
+        /// <summary>
+        /// 읽을 수 있는 크기 표현으로 바꿉니다.<br />
+        /// Change to readable size expression.
+        /// </summary>
+        /// <param name="size">
+        /// 바꿀 크기입니다.<br />
+        /// A size to be changed.
+        /// </param>
+        public static string ToReadableSize(long size) {
+            DataSize ds = GetDataSize(size);
+            double measured = size;
+
+            switch (ds) {
+                case DataSize.PiB:
+                    measured = PiB;
+                    break;
+                case DataSize.TiB:
+                    measured /= TiB;
+                    break;
+                case DataSize.GiB:
+                    measured /= GiB;
+                    break;
+                case DataSize.MiB:
+                    measured /= MiB;
+                    break;
+                case DataSize.KiB:
+                    measured /= KiB;
+                    break;
+                default:
+                    break;
+            }
+
+            return string.Format("{0:F} {1}", measured, ds.ToString());
+        }
     }
 }
