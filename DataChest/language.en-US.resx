@@ -250,10 +250,10 @@
     <value>Display progress of cryptographic process verbosely in console.</value>
   </data>
   <data name="DC_PerformanceLogging_Start" xml:space="preserve">
-    <value>Start a performance logging.</value>
+    <value>[{0}] Performance logging started.</value>
   </data>
   <data name="DC_PerformanceLogging_Ended" xml:space="preserve">
-    <value>Performance logging has ended.</value>
+    <value>[{0}] Performance logging ended.</value>
   </data>
   <data name="DC_Used_Library" xml:space="preserve">
     <value>Referenced libraries</value>
@@ -283,13 +283,13 @@
     <value>* Locate the file first, if file is not exist; use the string itself as key(or IV). However, if string begins with {0} or {1} used in accordance with the applicable rules. {0} - use the string itself as a key(or IV). {1} - use the contents of the file. (If file is not exist or access denied for file, error occurred)</value>
   </data>
   <data name="DC_PerformanceLogging_Aborted" xml:space="preserve">
-    <value>Performance logging was aborted due to error. ({0}: {1})</value>
+    <value>[{0}] Aborted. ({1}: {2}, {3}: {4})</value>
   </data>
   <data name="DC_PerformanceLogging_Checkpoint_Created" xml:space="preserve">
-    <value>[{0}] '{1}' - Checkpoint created.</value>
+    <value>[{0}] '{1}' Started.</value>
   </data>
   <data name="DC_PerformanceLogging_Checkpoint_Finished" xml:space="preserve">
-    <value>[{0}] '{1}' - Checkpoint finished. ({2}: {3}, {4}: {5})</value>
+    <value>[{0}] '{1}' Ended. ({2}: {3}, {4}: {5})</value>
   </data>
   <data name="DC_PerformanceLogging_ElapsedTime" xml:space="preserve">
     <value>Elapsed time</value>
@@ -302,5 +302,14 @@
   </data>
   <data name="DC_PerformanceLogging_Error" xml:space="preserve">
     <value>Error</value>
+  </data>
+  <data name="DC_Application_Info" xml:space="preserve">
+    <value>Application Information</value>
+  </data>
+  <data name="DC_PerformanceLogging_Exception" xml:space="preserve">
+    <value>Exception</value>
+  </data>
+  <data name="DC_PerformanceLogging_WriteLine" xml:space="preserve">
+    <value>[{0}] {1}</value>
   </data>
 </root>

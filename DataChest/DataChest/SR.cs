@@ -23,6 +23,7 @@ using System.Resources;
 namespace DataChest {
     static class SR {
         static readonly string[] m_translations = {
+            "DC_Application_Info",
             "DC_Available_Algorithm_List",
             "DC_Err_AccessDenied",
             "DC_Err_AmbiguousOption",
@@ -76,14 +77,15 @@ namespace DataChest {
             "DC_PerformanceLogging_Start",
             "DC_PerformanceLogging_Ended",
             "DC_PerformanceLogging_Aborted",
-            "DC_Usage",
-            "DC_Used_Library",
             "DC_PerformanceLogging_Checkpoint_Created",
             "DC_PerformanceLogging_Checkpoint_Finished",
             "DC_PerformanceLogging_Speed",
             "DC_PerformanceLogging_ElapsedTime",
             "DC_PerformanceLogging_None",
             "DC_PerformanceLogging_Error",
+            "DC_PerformanceLogging_WriteLine",
+            "DC_Usage",
+            "DC_Used_Library",
         };
 
         readonly static ResourceManager m_res;
