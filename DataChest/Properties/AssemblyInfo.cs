@@ -1,5 +1,23 @@
-﻿using System.Reflection;
-using System.Runtime.CompilerServices;
+﻿/*
+  Copyright (C) 2016. HYE WON, HWANG
+
+  This file is part of DataChest.
+
+  DataChest is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  DataChest is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with DataChest.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+using System.Reflection;
 using System.Runtime.InteropServices;
 
 // 어셈블리에 대한 일반 정보는 다음 특성 집합을 통해 
@@ -32,5 +50,5 @@ using System.Runtime.InteropServices;
 // 모든 값을 지정하거나 아래와 같이 '*'를 사용하여 빌드 번호 및 수정 번호가 자동으로 
 // 지정되도록 할 수 있습니다.
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("0.0.2.4")]
-[assembly: AssemblyFileVersion("0.0.2.4")]
+[assembly: AssemblyVersion("0.4.15.411")]
+[assembly: AssemblyFileVersion("0.4.15.411")]

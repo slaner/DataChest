@@ -19,17 +19,18 @@
 
 namespace DataChest {
     /// <summary>
-    /// ChestAPI 파일 형식에서 사용하는 버전 1 헤더입니다.
+    /// DCF(DataChest File) 형식에서 사용하는 버전 1 헤더입니다.<br />
+    /// Version 1 header used in DCF(DataChest File) format.
     /// </summary>
-    class ChestHeader1 : HeaderBase {
-    public ChestHeader1() : base(1) { }
+    class DC_HEADER_1 : HeaderBase {
+        public DC_HEADER_1() : base(1) { }
 
-    /// <summary>
-    /// 필드 버전이 아닌 헤더의 버전을 가져옵니다.
-    /// 상위 버전의 헤더를 만든 경우 이 속성이 정확한 헤더 버전을 반환하도록 재정의해야 합니다.
-    /// </summary>
-    public override ushort HeaderVersion {
-        get { return 1; }
+        /// <summary>
+        /// 필드 버전이 아닌 헤더의 버전을 가져옵니다.
+        /// 상위 버전의 헤더를 만든 경우 이 속성이 정확한 헤더 버전을 반환하도록 재정의해야 합니다.
+        /// </summary>
+        public override ushort HeaderVersion {
+            get { return 1; }
+        }
     }
-}
 }

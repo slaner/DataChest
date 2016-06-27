@@ -18,41 +18,22 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
 
 namespace DataChest {
-    static class PerformanceLogger {
-        static Stopwatch m_sw = new Stopwatch();
-        static ulong m;
-
-        static string LastCryptographyPerformance = "<결과 없음>";
-        static string LastFileIOPerformance = "<결과 없음>";
-        static ulong LastFileSize = 0;
-        static TimeSpan LastEntireTaskTime = TimeSpan.MinValue;
-
-
-
+    /// <summary>
+    /// 고유 식별자를 가져오는 함수를 노출합니다.<br />
+    /// Exposes function that receiving unique identifier.
+    /// </summary>
+    static class IDHelper {
         /// <summary>
-        /// 성능 기록기를 시작합니다.
+        /// 컴퓨터의 NetBIOS 이름과 사용자 이름을 가져옵니다.<br />
+        /// Get a computer's NetBIOS name and user name.
         /// </summary>
-        public static void Begin() {
-            m_sw.Restart();
-        }
-
-        /// <summary>
-        /// 성능 기록기를 종료합니다.
-        /// </summary>
-        public static void End() {
-            m_sw.Stop();
-        }
-
-
-
-        static void CalculateSpeed() {
-
+        public static string MachineUserName() {
+            string s;
+            try { s = Environment.UserName + "@" + Environment.MachineName; }
+            catch { s =  Environment.UserName + "@UNKNOWN_MACHINE"; }
+            return s;
         }
     }
 }

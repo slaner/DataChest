@@ -20,27 +20,28 @@ using System.IO;
 
 namespace DataChest {
     /// <summary>
-    /// ChestAPI 파일 형식에서 사용하는 버전 2 헤더입니다.
+    /// DCF(DataChest File) 형식에서 사용하는 버전 2 헤더입니다.<br />
+    /// Version 2 header used in DCF(DataChest File) format.
     /// </summary>
-    class ChestHeader2 : HeaderBase {
+    class DC_HEADER_2 : HeaderBase {
         string g_comment;
-        public ChestHeader2() : base(2) { }
+        public DC_HEADER_2() : base(2) { }
 
         protected override void ProcessArray(BinaryWriter bw) {
             if (string.IsNullOrEmpty(g_comment))
                 bw.Write((ushort)0);
             else {
-                byte[] bComment = ChestAPI.SystemUnicodeEncoding.GetBytes(g_comment);
+                byte[] bComment = Common.SystemEncoding.GetBytes(g_comment);
                 bw.Write(CommentLength);
                 bw.Write(bComment);
             }
         }
-        protected override void ProcessStream(BinaryReader br) {
+        protected internal override void ProcessStream(BinaryReader br) {
             ushort commentLength = br.ReadUInt16();
             if (commentLength == 0) return;
 
             byte[] bComment = br.ReadBytes(commentLength);
-            g_comment = ChestAPI.SystemUnicodeEncoding.GetString(bComment);
+            g_comment = Common.SystemEncoding.GetString(bComment);
         }
 
         /// <summary>
@@ -70,7 +71,7 @@ namespace DataChest {
                 // 32727 = short.MaxValue - 40(HeaderBaseSize + 2 for comment length)
                 if (value.Length > 32727) return;
                 g_comment = value;
-                HSize = (ushort)(HeaderBaseSize + 2 + (g_comment.Length * 2));
+                HSize = (ushort)(BaseHeaderModelSize + 2 + (g_comment.Length * 2));
             }
         }
     }

@@ -17,27 +17,19 @@
   along with DataChest.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-namespace DataChest.Types {
+using System;
+using System.Text;
+
+namespace DataChest {
     /// <summary>
-    /// 암,복호화에 사용될 알고리즘을 열거합니다.
-    /// SEED 알고리즘은 성능으로 인해 제외되었습니다.
+    /// 공통적으로 사용되는 값들을 정의한 클래스입니다.<br />
+    /// A class defining common used values.
     /// </summary>
-    public enum Algorithms : ushort {
-        Aes,
-        Des,
-        TripleDes,
-        // 2016 03 06 REMOVED
-        // PERFORMANCE ISSUE
-        // Seed128,
-        // Seed256,
-        Rc2,
-
-
-
-
-
-
-
-        LastMethod,
+    static class Common {
+        /// <summary>
+        /// 운영체제의 유니코드 인코딩을 가져옵니다.<br />
+        /// Gets unicode encoding for current Operating System.
+        /// </summary>
+        public static readonly Encoding SystemEncoding = BitConverter.IsLittleEndian ? Encoding.Unicode : Encoding.BigEndianUnicode;
     }
 }
