@@ -122,8 +122,11 @@ namespace DataChest {
         public void Start() {
             if (!Enabled) return;
             
+            m_buffer.AppendLine(
+                string.Format(
+                    SR.GetString("DC_PerformanceLogging_Start"),
+                    m_sw.Elapsed));
             m_sw.Start();
-            m_buffer.AppendLine(SR.GetString("DC_PerformanceLogging_Start"));
         }
 
         /// <summary>
@@ -139,7 +142,10 @@ namespace DataChest {
             if (!m_sw.IsRunning) return null;
 
             m_buffer.Append(' ', m_checkpointLevels * 2);
-            m_buffer.AppendLine(string.Format(SR.GetString("DC_PerformanceLogging_Checkpoint_Created"), m_sw.Elapsed, name));
+            m_buffer.AppendLine(
+                string.Format(SR.GetString("DC_PerformanceLogging_Checkpoint_Created"),
+                m_sw.Elapsed,
+                name));
             m_checkpointLevels++;
             return new Checkpoint(name, m_sw.Elapsed);
         }
@@ -182,6 +188,41 @@ namespace DataChest {
         }
 
         /// <summary>
+        /// 지정된 문자열을 성능 기록기에 줄 바꿈 문자와 같이 씁니다.<br />
+        /// Write given string into performance logger with new-line character.
+        /// </summary>
+        /// <param name="s">
+        /// 기록할 문자열입니다.<br />
+        /// A string to be written.
+        /// </param>
+        public void WriteLine(string s) {
+            if (!Enabled) return;
+            if (!m_sw.IsRunning) return;
+
+            m_sw.Stop();
+            m_buffer.AppendLine(
+                string.Format(
+                    SR.GetString("DC_PerformanceLogging_WriteLine"),
+                    m_sw.Elapsed,
+                    s));
+        }
+        /// <summary>
+        /// 지정된 문자열에 있는 서식 문자열을 형식화한 후 성능 기록기에 줄 바꿈 문자와 같이 씁니다.<br />
+        /// Formalize format string in given string and write into performance logger with new-line character.
+        /// </summary>
+        /// <param name="s">
+        /// 서식을 포함한 문자열입니다.<br />
+        /// A string that contains format.
+        /// </param>
+        /// <param name="args">
+        /// 치환될 값을 담고 있는 배열입니다.<br />
+        /// An array that contains a value to be replaced(=formatted).
+        /// </param>
+        public void WriteLine(string s, params object[] args) {
+            WriteLine(string.Format(s, args));
+        }
+
+        /// <summary>
         /// 성능 기록을 중단합니다.<br />
         /// Abort a performance logging.
         /// </summary>
@@ -189,13 +230,16 @@ namespace DataChest {
         /// 작업 결과입니다.<br />
         /// Task result.
         /// </param>
-        public TaskResult Abort(TaskResult r) {
+        public TaskResult Abort(TaskResult r, Exception e) {
             if (!Enabled) return r;
 
             m_sw.Stop();
             m_buffer.AppendLine(
                 string.Format(
                     SR.GetString("DC_PerformanceLogging_Aborted"),
+                    m_sw.Elapsed,
+                    SR.GetString("DC_PerformanceLogging_Exception"),
+                    e.ToString(),
                     SR.GetString("DC_PerformanceLogging_Error"),
                     r.ToString()));
             return r;
