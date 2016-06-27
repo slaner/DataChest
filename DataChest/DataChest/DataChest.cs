@@ -37,8 +37,8 @@ namespace DataChest {
             0x61, 0x65, 0x67, 0x6B, 0x6D, 0x71, 0x7F, 0x83,
         };
 
-        Option                  m_option    = null;
-        SymmetricAlgorithm      m_alg       = null;
+        Option m_option = null;
+        SymmetricAlgorithm m_alg = null;
 
         static DataChest() {
             // TODO: 이 곳에서 상위 버전 헤더에 대한 등록을 수행합니다.
@@ -49,7 +49,6 @@ namespace DataChest {
             HeaderManager.RegisterHeader<DC_HEADER_1>(1);
             HeaderManager.RegisterHeader<DC_HEADER_2>(2);
         }
-
         public DataChest(Option option) {
             m_option = option;
         }
@@ -78,7 +77,7 @@ namespace DataChest {
                 
                 if (!m_option.DisableVerification) {
                     long lnPrevPos = s.Position;
-                    hash = HashAPI.ComputeHashUInt32(s);
+                    hash = HashHelper.ComputeUInt32(s);
                     
                     if (hdr.EChecksum != hash) {
                         s.Dispose();
@@ -100,7 +99,7 @@ namespace DataChest {
                 return r;
             }
             
-            hash = HashAPI.ComputeHashUInt32(result);
+            hash = HashHelper.ComputeUInt32(result);
             if (hdr.RChecksum != hash) {
                 s.Dispose();
                 return TaskResult.IncorrectRawDataChecksum;
@@ -176,7 +175,7 @@ namespace DataChest {
                 // TODO: Multiple file support?
                 try { File.Delete(m_option.In[0]); } catch {
                     sin.Dispose();
-                    return TaskResult.CleanupFailedSucceed;
+                    return TaskResult.SucceedButCleanupFailed;
                 }
             }
             
@@ -212,7 +211,7 @@ namespace DataChest {
 
             if (!m_option.DisableVerification) {
                 long lnPrevPos = sin.Position;
-                uint prevHash = HashAPI.ComputeHashUInt32(sin);
+                uint prevHash = HashHelper.ComputeUInt32(sin);
 
                 if (hdr.EChecksum != prevHash) {
                     sin.Dispose();
@@ -232,7 +231,7 @@ namespace DataChest {
             }
 
             if (!m_option.DisableVerification) {
-                if (HashAPI.ComputeHashUInt32(result) != hdr.RChecksum) {
+                if (HashHelper.ComputeUInt32(result) != hdr.RChecksum) {
                     sin.Dispose();
                     sout.Dispose();
                     FileHelper.DeleteFileIgnoreErrors(output);
@@ -259,23 +258,23 @@ namespace DataChest {
             if (m_option.Cleanup) {
                 try { File.Delete(m_option.In[0]); } catch {
                     sin.Dispose();
-                    return TaskResult.CleanupFailedSucceed;
+                    return TaskResult.SucceedButCleanupFailed;
                 }
             }
 
             return TaskResult.Success;
         }
-
+        /// <summary>
+        /// 암/복호화 작업을 수행합니다.<br />
+        /// Perform cryptographic process.
+        /// </summary>
         public TaskResult Process() {
             if (m_option.In.Count == 0) return TaskResult.NoInputFile;
-            if (m_option.ShowHeaderInfo) {
-                return ShowHeaderInfo();
-            }
+            if (m_option.ShowHeaderInfo) return ShowHeaderInfo();
             if (!CheckOptions()) return TaskResult.AmbiguousOption;
-            if (m_option.BufferSize.HasValue) {
-                if (m_option.BufferSize.Value < 128) return TaskResult.InvalidBufferSize;
-            } else m_option.BufferSize = DefaultBufferSize;
-
+            if (!m_option.BufferSize.HasValue) m_option.BufferSize = DefaultBufferSize;
+            else if (m_option.BufferSize.Value < 128) return TaskResult.InvalidBufferSize;
+            
             m_alg = AlgorithmManager.CreateAlgorithm((int)m_option.Algorithm);
             if (m_alg == null) return TaskResult.InvalidAlgorithm;
 
@@ -333,7 +332,7 @@ namespace DataChest {
             if (r != TaskResult.Success) return r;
 
             byte[] temp = new byte[m_alg.Key.Length];
-            Buffer.BlockCopy(HashAPI.ComputeHash(spw), 0, temp, 0, temp.Length);
+            Buffer.BlockCopy(HashHelper.Compute(spw), 0, temp, 0, temp.Length);
             m_alg.Key = temp;
             spw.Dispose();
 
@@ -345,7 +344,7 @@ namespace DataChest {
                 r = GetDataStream(iv, out siv);
                 if (r != TaskResult.Success) return r;
                 temp = new byte[m_alg.IV.Length];
-                Buffer.BlockCopy(HashAPI.ComputeHash(siv), 0, temp, 0, temp.Length);
+                Buffer.BlockCopy(HashHelper.Compute(siv), 0, temp, 0, temp.Length);
                 m_alg.IV = temp;
                 spw.Dispose();
             }
@@ -550,6 +549,10 @@ namespace DataChest {
                 else return;
                 cs.Dispose();
             }
+        }
+
+        internal Option Option {
+            get { return m_option; }
         }
     }
 }
