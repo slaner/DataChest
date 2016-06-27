@@ -100,7 +100,8 @@ namespace DataChest {
         readonly bool g_enabled;
         readonly StreamWriter m_writer;
         int m_checkpointLevels = 0;
-        
+        long g_size;
+
         public PerformanceLogger(DataChest dc) {
             g_enabled = dc.Option.Verbose;
             if (g_enabled) {
@@ -239,7 +240,7 @@ namespace DataChest {
                     SR.GetString("DC_PerformanceLogging_Aborted"),
                     m_sw.Elapsed,
                     SR.GetString("DC_PerformanceLogging_Exception"),
-                    e.ToString() ?? string.Format("<{0}>", SR.GetString("DC_PerformanceLogging_None")),
+                    e.GetType().ToString() ?? string.Format("<{0}>", SR.GetString("DC_PerformanceLogging_None")),
                     SR.GetString("DC_PerformanceLogging_Error"),
                     r.ToString()));
             return r;
@@ -250,9 +251,22 @@ namespace DataChest {
         /// </summary>
         public void End() {
             if (!Enabled) return;
+            if (!m_sw.IsRunning) return;
             m_sw.Stop();
 
-            m_writer.WriteLine(SR.GetString("DC_PerformanceLogging_Ended"));
+            m_writer.WriteLine(
+                string.Format(
+                    SR.GetString("DC_PerformanceLogging_Ended"),
+                    m_sw.Elapsed));
+            m_writer.WriteLine(
+                string.Format(
+                    SR.GetString("DC_PerformanceLogging_Summary"),
+                    SR.GetString("DC_PerformanceLogging_Total_ElapsedTime"),
+                    m_sw.Elapsed + m_writer.NewLine,
+                    SR.GetString("DC_PerformanceLogging_ActualSize"),
+                    string.Format("{0} ({1:N0} Bytes)", UnitHelper.ToReadableSize(g_size), g_size) + m_writer.NewLine,
+                    SR.GetString("DC_PerformanceLogging_Speed"),
+                    UnitHelper.ComputeSpeed(g_size, m_sw.Elapsed)));
         }
 
         /// <summary>
@@ -267,6 +281,18 @@ namespace DataChest {
             if (!Enabled) return;
 
             m_writer.Dispose();
+        }
+
+        /// <summary>
+        /// 실제 처리될 데이터의 크기를 설정합니다.<br />
+        /// Sets a actual size of data to be proceed.
+        /// </summary>
+        /// <param name="size">
+        /// 처리될 데이터의 크기입니다.<br />
+        /// Size of data to be proceed.
+        /// </param>
+        public void SetActualSize(long size) {
+            g_size = size;
         }
     }
 }

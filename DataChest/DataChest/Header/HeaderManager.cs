@@ -64,6 +64,7 @@ namespace DataChest {
                 result = (TaskResult) DataChest.Logger?.Abort(TaskResult.InvalidHeaderClass, e);
                 return null;
             }
+            DataChest.Logger?.CloseCheckpoint(checkpoint, 0);
             return hdr;
         }
 
