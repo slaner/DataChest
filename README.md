@@ -21,7 +21,7 @@ Yes, I know this project is not unique and not rare, but there's reason. I wante
 
 # Improvements (TODO list)
 - Minimize memory usage for optimizing.
-- Multi-language support.
+- Multi-language support. (Currently the Korean and English are supported)
 - Apply application icon.
 
 # Options
