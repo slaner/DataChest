@@ -43,7 +43,10 @@ namespace DataChest {
         /// A <see cref="byte"/> array to be hash computed.
         /// </param>
         public static byte[] Compute(byte[] b) {
-            return m_sha.ComputeHash(b);
+            var checkpoint = DataChest.Logger?.OpenCheckpoint(nameof(Compute));
+            var result = m_sha.ComputeHash(b);
+            DataChest.Logger?.CloseCheckpoint(checkpoint, b.Length);
+            return result;
         }
         /// <summary>
         /// <see cref="Stream"/> 에 대한 SHA-256 해시를 계산합니다.<br />
@@ -54,7 +57,10 @@ namespace DataChest {
         /// A <see cref="Stream"/> to be hash computed.
         /// </param>
         public static byte[] Compute(Stream s) {
-            return m_sha.ComputeHash(s);
+            var checkpoint = DataChest.Logger?.OpenCheckpoint(nameof(Compute));
+            var result = m_sha.ComputeHash(s);
+            DataChest.Logger?.CloseCheckpoint(checkpoint, s.Length);
+            return result;
         }
         /// <summary>
         /// <see cref="byte"/> 배열에 대한 SHA-256 해시를 계산하고 부호 없는 32비트 정수로 변환합니다.<br />

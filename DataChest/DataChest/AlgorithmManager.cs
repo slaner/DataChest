@@ -110,11 +110,20 @@ namespace DataChest {
         /// Identifier number of algorithm.
         /// </param>
         public static SymmetricAlgorithm CreateAlgorithm(int id) {
-            if (!g_algorithms.ContainsKey(id)) return null;
+            var checkpoint = DataChest.Logger?.OpenCheckpoint(nameof(CreateAlgorithm));
+            if (!g_algorithms.ContainsKey(id)) {
+                DataChest.Logger?.WriteLine("DC_Error_Missing_Algorithm_Identifier");
+                DataChest.Logger?.CloseCheckpoint(checkpoint, 0);
+                return null;
+            }
             SymmetricAlgorithm sa;
             try { sa = (SymmetricAlgorithm) Activator.CreateInstance(g_algorithms[id]); }
-            catch { return null; }
+            catch (Exception e) {
+                DataChest.Logger?.Abort(TaskResult.InvalidAlgorithm, e);
+                return null;
+            }
 
+            DataChest.Logger?.CloseCheckpoint(checkpoint, 0);
             return sa;
         }
     }

@@ -26,10 +26,7 @@ namespace DataChest {
     /// <summary>
     /// DataChest 파일에서 사용하는 헤더 기본 모델입니다.<br />
     /// A base header model used in DCF(DataChest File).
-    /// </summary>
-    /// <remarks>
-    /// 
-    /// </remarks>
+    /// </summary>\
     abstract class HeaderBase : IHeader {
         /// <summary>
         /// 기본 모델 헤더의 바이트 크기입니다.<br />
@@ -64,10 +61,7 @@ namespace DataChest {
             g_signature = HeaderSignature;
             g_version = headerVersion;
         }
-
-        internal static HeaderBase Create() {
-            return new DC_HEADER_1();
-        }
+        
         internal StringBuilder TraverseProperties() {
             Type t = GetType();
             var properties = t.GetProperties(BindingFlags.Public | BindingFlags.Instance);
@@ -116,16 +110,22 @@ namespace DataChest {
 
 
         /// <summary>
-        /// 기본 필드가 아닌 상위 버전의 헤더에서 추가된 필드를 배열로 변환하는 작업을 처리하는 함수입니다.
-        /// 추가된 필드는 <see cref="ProcessArray(BinaryWriter)"/> 메서드의 매개변수를 이용하여 <see cref="BinaryWriter"/>.Write() 메서드를 호출하여야 합니다.
+        /// 기본 필드가 아닌 상위 버전의 헤더에서 추가된 필드를 배열로 변환하는 작업을 처리하는 함수입니다.<br />
+        /// Convert fields that added by higher version header to byte array.
         /// </summary>
-        /// <param name="bw">필드의 내용을 기록할 <see cref="BinaryWriter"/> 개체입니다.</param>
+        /// <param name="bw">
+        /// 필드의 내용을 기록할 <see cref="BinaryWriter"/> 개체입니다.<br />
+        /// A <see cref="BinaryWriter"/> instance to write fields data.
+        /// </param>
         protected virtual void ProcessArray(BinaryWriter bw) { }
         /// <summary>
-        /// 기본 필드가 아닌 상위 버전의 헤더에서 추가된 필드를 가진 헤더를 스트림에서 읽어오는 작업을 처리하는 함수입니다.
-        /// 추가된 필드는 <see cref="ProcessStream(BinaryReader)"/> 메서드의 매개변수를 이용하여 <see cref="BinaryReader"/>.Read...() 메서드를 호출하여야 합니다.
+        /// 기본 필드가 아닌 상위 버전의 헤더에서 추가된 필드를 가진 헤더를 스트림에서 읽어오는 작업을 처리하는 함수입니다.<br />
+        /// Read fields that added by higher version header from stream.
         /// </summary>
-        /// <param name="br">필드의 내용을 읽어올 <see cref="BinaryReader"/> 개체입니다.</param>
+        /// <param name="br">
+        /// 필드의 내용을 읽어올 <see cref="BinaryReader"/> 개체입니다.<br />
+        /// A <see cref="BinaryReader"/> instance to read fields data.
+        /// </param>
         protected internal virtual void ProcessStream(BinaryReader br) { }
         /// <summary>
         /// 기본 필드의 내용을 읽어오는 작업을 수행하는 함수입니다.<br />
@@ -136,15 +136,25 @@ namespace DataChest {
         /// A instance of <see cref="BinaryReader"/> class to read instance <see cref="Stream"/> class that containing basic fields information.
         /// </param>
         protected internal TaskResult ProcessFields(BinaryReader br) {
+            var checkpoint = DataChest.Logger?.OpenCheckpoint(nameof(ProcessFields));
             g_signature = br.ReadUInt16();
-            if (g_signature != HeaderSignature) return TaskResult.InvalidSignature;
+            if (g_signature != HeaderSignature) {
+                if (DataChest.Logger == null) return TaskResult.InvalidSignature;
+                else return (TaskResult)DataChest.Logger?.Abort(TaskResult.InvalidSignature, null);
+            }
             
             g_version = br.ReadUInt16();
-            if (g_version != HeaderVersion) return TaskResult.HeaderVersionNotMatch;
-            
+            if (g_version != HeaderVersion) {
+                if (DataChest.Logger == null) return TaskResult.HeaderVersionNotMatch;
+                else return (TaskResult)DataChest.Logger?.Abort(TaskResult.HeaderVersionNotMatch, null);
+            }
+
             g_unused = br.ReadUInt32();
-            if (Unused != 0) return TaskResult.InvalidHeaderFieldValue;
-            
+            if (Unused != 0) {
+                if (DataChest.Logger == null) return TaskResult.InvalidHeaderFieldValue;
+                else return (TaskResult)DataChest.Logger?.Abort(TaskResult.InvalidHeaderFieldValue, null);
+            }
+
             uint chkHeader = br.ReadUInt32();
             g_echksum = br.ReadUInt32();
             g_rchksum = br.ReadUInt32();
@@ -152,16 +162,23 @@ namespace DataChest {
             g_esize = br.ReadUInt64();
             g_rsize = br.ReadUInt64();
             
-            try { ProcessStream(br); } catch { return TaskResult.ErrorCausedUDPR; }
+            try { ProcessStream(br); }
+            catch (Exception e) {
+                if (DataChest.Logger == null) return TaskResult.ErrorCausedUDPR;
+                else return (TaskResult)DataChest.Logger?.Abort(TaskResult.ErrorCausedUDPR, e);
+            }
             
             byte[] bHdr;
             TaskResult r = ToArray(out bHdr);
             if (r != TaskResult.Success) return r;
             
-            if (HashAPI.ComputeHashUInt32(bHdr) != chkHeader)
-                return TaskResult.IncorrectHeaderChecksum;
+            if (HashHelper.ComputeUInt32(bHdr) != chkHeader) {
+                if (DataChest.Logger == null) return TaskResult.IncorrectHeaderChecksum;
+                else return (TaskResult)DataChest.Logger?.Abort(TaskResult.IncorrectHeaderChecksum, null);
+            }
 
             g_hchksum = chkHeader;
+            DataChest.Logger?.CloseCheckpoint(checkpoint, 0);
             return TaskResult.Success;
         }
 
@@ -169,9 +186,11 @@ namespace DataChest {
 
 
         /// <summary>
-        /// 헤더의 내용을 바이트 배열로 변환합니다.
+        /// 헤더의 내용을 바이트 배열로 변환합니다.<br />
+        /// Convert header to byte array.
         /// </summary>
         public TaskResult ToArray(out byte[] arr) {
+            var checkpoint = DataChest.Logger?.OpenCheckpoint(nameof(ToArray));
             arr = null;
             MemoryStream ms = new MemoryStream(HSize);
             using (BinaryWriter bw = new BinaryWriter(ms)) {
@@ -186,91 +205,114 @@ namespace DataChest {
                 bw.Write(g_rsize);
 
                 // Higher version support
-                try { ProcessArray(bw); } catch { return TaskResult.ErrorCausedUDPR; }
+                try { ProcessArray(bw); }
+                catch (Exception e) {
+                    if (DataChest.Logger == null) return TaskResult.ErrorCausedUDPR;
+                    else return (TaskResult)DataChest.Logger?.Abort(TaskResult.ErrorCausedUDPR, e);
+                }
             }
 
             arr = ms.ToArray();
+            DataChest.Logger?.CloseCheckpoint(checkpoint, arr.Length);
             return TaskResult.Success;
         }
         /// <summary>
-        /// 암호화 작업에 대한 필드의 값을 설정합니다.
+        /// 암호화 데이터를 채웁니다.<br />
+        /// Fills an encryption information.
         /// </summary>
-        /// <param name="s">암호화할 데이터가 저장되어 있는 <see cref="Stream"/> 개체입니다.</param>
-        /// <param name="b">암호화된 데이터가 저장된 바이트 배열입니다.</param>
-        public TaskResult AssignBasicInformationEncrypt(Stream s, byte[] b) {
+        /// <param name="s">
+        /// 암호화할 데이터가 저장되어 있는 <see cref="Stream"/> 개체입니다.<br />
+        /// A <see cref="Stream"/> instance that containing data to be encrypted.
+        /// </param>
+        /// <param name="b">
+        /// 암호화된 데이터가 저장된 바이트 배열입니다.<br />
+        /// A <see cref="byte"/> array which encrypted data stored.
+        /// </param>
+        public TaskResult FillEncryptionInfo(Stream s, byte[] b) {
+            var checkpoint = DataChest.Logger?.OpenCheckpoint(nameof(FillEncryptionInfo));
             g_rsize = (ulong)s.Length;
             g_esize = (ulong)b.LongLength;
 
             s.Seek(0, SeekOrigin.Begin);
-            g_rchksum = HashAPI.ComputeHashUInt32(s);
-            g_echksum = HashAPI.ComputeHashUInt32(b);
+            g_rchksum = HashHelper.ComputeUInt32(s);
+            g_echksum = HashHelper.ComputeUInt32(b);
             byte[] bTemp;
             TaskResult r = ToArray(out bTemp);
             if (r != TaskResult.Success) return r;
 
-            g_hchksum = HashAPI.ComputeHashUInt32(bTemp);
+            g_hchksum = HashHelper.ComputeUInt32(bTemp);
 
+            DataChest.Logger?.CloseCheckpoint(checkpoint, 0);
             return TaskResult.Success;
         }
 
         /// <summary>
-        /// 필드 버전이 아닌 헤더의 버전을 가져옵니다.
-        /// 상위 버전의 헤더를 만든 경우 이 속성이 정확한 헤더 버전을 반환하도록 재정의해야 합니다.
+        /// 필드 버전이 아닌 헤더의 버전을 가져옵니다. (이 속성은 반드시 맞는 헤더 버전을 반환하도록 재정의되어야 합니다)<br />
+        /// Get a header version. (This property must be overrided to return correct header version)
         /// </summary>
         public virtual ushort HeaderVersion {
             get { return 0; }
         }
         /// <summary>
-        /// 시그니쳐를 가져옵니다.
+        /// 시그니쳐를 가져옵니다.<br />
+        /// Get a signature.
         /// </summary>
         public ushort Signature {
             get { return g_signature; }
         }
         /// <summary>
-        /// 버전을 가져옵니다.
+        /// 버전을 가져옵니다.<br />
+        /// Get a version.
         /// </summary>
         public ushort Version {
             get { return g_version; }
         }
         /// <summary>
-        /// 사용되지 않습니다.
+        /// 사용되지 않습니다.<br />
+        /// Unused field.
         /// </summary>
         public uint Unused {
             get { return g_unused; }
         }
         /// <summary>
-        /// 헤더의 체크섬을 가져옵니다.
+        /// 헤더의 체크섬을 가져옵니다.<br />
+        /// Get a checksum of header.
         /// </summary>
         public uint HChecksum {
             get { return g_hchksum; }
         }
         /// <summary>
-        /// 암호화된 데이터의 체크섬을 가져옵니다.
+        /// 암호화된 데이터의 체크섬을 가져옵니다.<br />
+        /// Get a checksum of encrypted data.
         /// </summary>
         public uint EChecksum {
             get { return g_echksum; }
         }
         /// <summary>
-        /// 원본 데이터의 체크섬을 가져옵니다.
+        /// 원본 데이터의 체크섬을 가져옵니다.<br />
+        /// Get a checksum of raw data.
         /// </summary>
         public uint RChecksum {
             get { return g_rchksum; }
         }
         /// <summary>
-        /// 헤더의 크기를 가져옵니다.
+        /// 헤더의 크기를 가져옵니다.<br />
+        /// Get a size of header.
         /// </summary>
         public ushort HSize {
             get { return g_hsize; }
             protected set { g_hsize = value; }
         }
         /// <summary>
-        /// 암호화된 데이터의 크기를 가져옵니다.
+        /// 암호화된 데이터의 크기를 가져옵니다.<br />
+        /// Get a size of encrypted data.
         /// </summary>
         public ulong ESize {
             get { return g_esize; }
         }
         /// <summary>
-        /// 원본 데이터의 크기를 가져옵니다.
+        /// 원본 데이터의 크기를 가져옵니다.<br />
+        /// Get a size of raw data.
         /// </summary>
         public ulong RSize {
             get { return g_rsize; }

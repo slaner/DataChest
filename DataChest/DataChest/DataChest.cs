@@ -39,6 +39,7 @@ namespace DataChest {
 
         Option m_option = null;
         SymmetricAlgorithm m_alg = null;
+        static PerformanceLogger m_log = null;
 
         static DataChest() {
             // TODO: 이 곳에서 상위 버전 헤더에 대한 등록을 수행합니다.
@@ -51,6 +52,7 @@ namespace DataChest {
         }
         public DataChest(Option option) {
             m_option = option;
+            m_log = new PerformanceLogger(this);
         }
 
 
@@ -63,6 +65,7 @@ namespace DataChest {
         /// A instance of <see cref="Stream"/> that contains data.
         /// </param>
         TaskResult TestProcess(Stream s) {
+            var checkpoint = Logger?.OpenCheckpoint(nameof(TestProcess));
             TaskResult r = 0;
             byte[] result = null;
             HeaderBase hdr = null;
@@ -72,7 +75,8 @@ namespace DataChest {
                 hdr = HeaderManager.FromStream(s, out r);
                 if (r != TaskResult.Success) {
                     s.Dispose();
-                    return r;
+                    if (Logger == null) return r;
+                    else return (TaskResult)Logger?.Abort(r, null);
                 }
                 
                 if (!m_option.DisableVerification) {
@@ -81,7 +85,8 @@ namespace DataChest {
                     
                     if (hdr.EChecksum != hash) {
                         s.Dispose();
-                        return TaskResult.IncorrectEncryptedDataChecksum;
+                        if (Logger == null) return TaskResult.IncorrectEncryptedDataChecksum;
+                        else return (TaskResult) Logger?.Abort(TaskResult.IncorrectEncryptedDataChecksum, null);
                     }
                     
                     s.Seek(lnPrevPos, SeekOrigin.Begin);
@@ -125,6 +130,7 @@ namespace DataChest {
         /// A name of output file.
         /// </param>
         TaskResult EncryptProcess(Stream sin, Stream sout, string output) {
+            var checkpoint = Logger?.OpenCheckpoint(nameof(EncryptProcess));
             byte[] result;
             TaskResult r = Encrypt(sin, m_alg, out result);
             if (r != TaskResult.Success) {
@@ -142,7 +148,7 @@ namespace DataChest {
                 sout.Dispose();
                 return r;
             }
-            r = hdr.AssignBasicInformationEncrypt(sin, result);
+            r = hdr.FillEncryptionInfo(sin, result);
 
             byte[] header;
             r = hdr.ToArray(out header);
@@ -164,21 +170,23 @@ namespace DataChest {
                     if (remain > 0)
                         bw.Write(result, loop_count * m_option.BufferSize.Value, remain);
                 }
-            }
-            catch {
+            } catch (Exception e) {
                 sin.Dispose();
                 FileHelper.DeleteFileIgnoreErrors(output);
-                return TaskResult.StreamWriteError;
+                if (Logger == null) return TaskResult.StreamWriteError;
+                else return (TaskResult)Logger?.Abort(TaskResult.StreamWriteError, e);
             }
 
             if (m_option.Cleanup) {
                 // TODO: Multiple file support?
                 try { File.Delete(m_option.In[0]); } catch {
                     sin.Dispose();
+                    Logger?.CloseCheckpoint(checkpoint, 0);
                     return TaskResult.SucceedButCleanupFailed;
                 }
             }
-            
+
+            Logger?.CloseCheckpoint(checkpoint, 0);
             return TaskResult.Success;
         }
         /// <summary>
@@ -198,6 +206,7 @@ namespace DataChest {
         /// A name of output file.
         /// </param>
         TaskResult DecryptProcess(Stream sin, Stream sout, string output) {
+            var checkpoint = Logger?.OpenCheckpoint(nameof(DecryptProcess));
             byte[] result;
             TaskResult r;
 
@@ -217,7 +226,8 @@ namespace DataChest {
                     sin.Dispose();
                     sout.Dispose();
                     FileHelper.DeleteFileIgnoreErrors(output);
-                    return TaskResult.IncorrectEncryptedDataChecksum;
+                    if (Logger == null) return TaskResult.IncorrectEncryptedDataChecksum;
+                    else return (TaskResult)Logger?.Abort(TaskResult.IncorrectEncryptedDataChecksum, null);
                 }
 
                 sin.Seek(lnPrevPos, SeekOrigin.Begin);
@@ -235,7 +245,8 @@ namespace DataChest {
                     sin.Dispose();
                     sout.Dispose();
                     FileHelper.DeleteFileIgnoreErrors(output);
-                    return TaskResult.IncorrectEncryptedDataChecksum;
+                    if (Logger == null) return TaskResult.IncorrectRawDataChecksum;
+                    else return (TaskResult)Logger?.Abort(TaskResult.IncorrectRawDataChecksum, null);
                 }
             }
 
@@ -249,19 +260,22 @@ namespace DataChest {
                     if (remain > 0)
                         bw.Write(result, loop_count * m_option.BufferSize.Value, remain);
                 }
-            } catch {
+            } catch (Exception e) {
                 sin.Dispose();
                 FileHelper.DeleteFileIgnoreErrors(output);
-                return TaskResult.StreamWriteError;
+                if (Logger == null) return TaskResult.StreamWriteError;
+                else return (TaskResult)Logger?.Abort(TaskResult.StreamWriteError, e);
             }
 
             if (m_option.Cleanup) {
                 try { File.Delete(m_option.In[0]); } catch {
                     sin.Dispose();
+                    Logger?.CloseCheckpoint(checkpoint, 0);
                     return TaskResult.SucceedButCleanupFailed;
                 }
             }
 
+            Logger?.CloseCheckpoint(checkpoint, 0);
             return TaskResult.Success;
         }
         /// <summary>
@@ -274,7 +288,8 @@ namespace DataChest {
             if (!CheckOptions()) return TaskResult.AmbiguousOption;
             if (!m_option.BufferSize.HasValue) m_option.BufferSize = DefaultBufferSize;
             else if (m_option.BufferSize.Value < 128) return TaskResult.InvalidBufferSize;
-            
+
+            Logger?.Start();
             m_alg = AlgorithmManager.CreateAlgorithm((int)m_option.Algorithm);
             if (m_alg == null) return TaskResult.InvalidAlgorithm;
 
@@ -286,34 +301,33 @@ namespace DataChest {
             r = FileHelper.OpenFileStream(m_option.In[0], out fs);
             if (r != TaskResult.Success) return r;
 
-            if (m_option.RunTest) return TestProcess(fs);
+            if (m_option.RunTest) {
+                r = TestProcess(fs);
+            }
 
             string output;
             r = FileHelper.BuildOutput(m_option, out output);
-            
             if (r != TaskResult.Success) {
                 fs.Dispose();
                 return r;
             }
 
             FileStream ofs;
-            try { ofs = new FileStream(output, m_option.Overwrite ? FileMode.Create : FileMode.CreateNew); }
-            catch (IOException) {
+            r = FileHelper.CreateFileStream(output, m_option.Overwrite, out ofs);
+            if (r != TaskResult.Success) {
                 fs.Dispose();
-                return TaskResult.FileAlreadyExists;
-            }
-            catch {
-                fs.Dispose();
-                return TaskResult.IOError;
+                return r;
             }
 
             r = m_option.Decrypt ? DecryptProcess(fs, ofs, output) : EncryptProcess(fs, ofs, output);
             if (r != TaskResult.Success) FileHelper.DeleteFileIgnoreErrors(output);
+
+            Logger?.End();
             return r;
         }
 
         public void Dispose() {
-
+            Logger?.Dispose();
         }
 
         /// <summary>
@@ -321,6 +335,7 @@ namespace DataChest {
         /// Set a password and IV used by cryptographic function.
         /// </summary>
         TaskResult SetupAlgorithm() {
+            var checkpoint = Logger?.OpenCheckpoint(nameof(SetupAlgorithm));
             TaskResult r;
             string pw, iv = null;
             if (string.IsNullOrEmpty(m_option.Password)) pw = IDHelper.MachineUserName();
@@ -349,6 +364,7 @@ namespace DataChest {
                 spw.Dispose();
             }
 
+            Logger?.CloseCheckpoint(checkpoint, 0);
             return TaskResult.Success;
         }
         /// <summary>
@@ -378,30 +394,34 @@ namespace DataChest {
         /// A variable to store data stream.
         /// </param>
         TaskResult GetDataStream(string source, out Stream s) {
+            var checkpoint = Logger?.OpenCheckpoint(nameof(GetDataStream));
             s = null;
             if (source.StartsWith(CipherFromFile)) {
                 FileStream fs;
                 TaskResult r = FileHelper.OpenFileStream(source.Substring(CipherFromFile.Length), out fs);
-                if (r == TaskResult.FileNotFound) {
-                    byte[] b = Common.SystemEncoding.GetBytes(source.Substring(CipherFromFile.Length));
-                    s = new MemoryStream(b);
-                } else if (r == TaskResult.Success) s = fs;
-                return r;
+                if (r != TaskResult.Success) return r;
+                s = fs;
+                Logger?.CloseCheckpoint(checkpoint, 0);
+                return TaskResult.Success;
             } else if (source.StartsWith(CipherPlainText)) {
                 try {
                     byte[] b = Common.SystemEncoding.GetBytes(source.Substring(CipherPlainText.Length));
                     s = new MemoryStream(b);
+                    Logger?.CloseCheckpoint(checkpoint, 0);
                     return TaskResult.Success;
-                } catch (EncoderFallbackException) {
-                    return TaskResult.EncodingError;
+                } catch (EncoderFallbackException e) {
+                    if (Logger == null) return TaskResult.EncodingError;
+                    else return (TaskResult) Logger?.Abort(TaskResult.EncodingError, e);
                 }
             } else {
                 try {
                     byte[] b = Common.SystemEncoding.GetBytes(source);
                     s = new MemoryStream(b);
+                    Logger?.CloseCheckpoint(checkpoint, 0);
                     return TaskResult.Success;
-                } catch (EncoderFallbackException) {
-                    return TaskResult.EncodingError;
+                } catch (EncoderFallbackException e) {
+                    if (Logger == null) return TaskResult.EncodingError;
+                    else return (TaskResult) Logger?.Abort(TaskResult.EncodingError, e);
                 }
             }
         }
@@ -437,6 +457,9 @@ namespace DataChest {
         /// A variable of <see cref="byte"/> array to store result data.
         /// </param>
         TaskResult Encrypt(Stream s, SymmetricAlgorithm alg, out byte[] result) {
+            long length = s.Length;
+            long written = 0;
+            var checkpoint = Logger?.OpenCheckpoint(nameof(Encrypt));
             result = null;
             MemoryStream ms = new MemoryStream();
 
@@ -444,33 +467,46 @@ namespace DataChest {
             using (CryptoStream cs = new CryptoStream(ms, ct, CryptoStreamMode.Write)) {
                 byte[] temp;
                 try { temp = new byte[m_option.BufferSize.Value]; }
-                catch {
+                catch (Exception e) {
+                    SafeDispose(cs);
                     ct.Dispose();
-                    ms.Dispose();
-                    return TaskResult.OutOfMemory;
+                    if (Logger == null) return TaskResult.OutOfMemory;
+                    else return (TaskResult) Logger?.Abort(TaskResult.OutOfMemory, e);
                 }
                 
                 int nRead;
                 try { nRead = s.Read(temp, 0, m_option.BufferSize.Value); }
-                catch {
+                catch (Exception e) {
+                    SafeDispose(cs);
                     ct.Dispose();
-                    return TaskResult.StreamReadError;
+                    if (Logger == null) return TaskResult.StreamReadError;
+                    else return (TaskResult)Logger?.Abort(TaskResult.StreamReadError, e);
                 }
-                
+
+                var checkpoint2 = Logger?.OpenCheckpoint("WriteResultToStream");
                 while (nRead > 0) {
-                    try { cs.Write(temp, 0, nRead); } catch {
+                    written += nRead;
+                    try { cs.Write(temp, 0, nRead); }
+                    catch (Exception e) {
+                        SafeDispose(cs);
                         ct.Dispose();
-                        return TaskResult.StreamWriteError;
+                        if (Logger == null) return TaskResult.StreamWriteError;
+                        else return (TaskResult)Logger?.Abort(TaskResult.StreamWriteError, e);
                     }
 
-                    try { nRead = s.Read(temp, 0, m_option.BufferSize.Value); } catch {
+                    try { nRead = s.Read(temp, 0, m_option.BufferSize.Value); }
+                    catch (Exception e) {
+                        SafeDispose(cs);
                         ct.Dispose();
-                        return TaskResult.StreamReadError;
+                        if (Logger == null) return TaskResult.StreamReadError;
+                        else return (TaskResult)Logger?.Abort(TaskResult.StreamReadError, e);
                     }
                 }
+                Logger?.CloseCheckpoint(checkpoint2, written);
             }
 
             result = ms.ToArray();
+            Logger?.CloseCheckpoint(checkpoint, length);
             return TaskResult.Success;
         }
         /// <summary>
@@ -490,6 +526,9 @@ namespace DataChest {
         /// A variable of <see cref="byte"/> array to store result data.
         /// </param>
         TaskResult Decrypt(Stream s, SymmetricAlgorithm alg, out byte[] result) {
+            long written = 0;
+            long length = s.Length;
+            var checkpoint = Logger?.OpenCheckpoint(nameof(Decrypt));
             result = null;
             MemoryStream ms = new MemoryStream();
             ICryptoTransform ct = alg.CreateDecryptor();
@@ -498,35 +537,49 @@ namespace DataChest {
             using (CryptoStream cs = new CryptoStream(s, ct, CryptoStreamMode.Read)) {
                 byte[] temp;
                 try { temp = new byte[size]; }
-                catch {
+                catch (Exception e) {
                     SafeDispose(cs);
                     ct.Dispose();
-                    return TaskResult.OutOfMemory;
+                    if (Logger == null) return TaskResult.OutOfMemory;
+                    else return (TaskResult) Logger?.Abort(TaskResult.OutOfMemory, e);
                 }
                 
                 int nRead;
                 try { nRead = cs.Read(temp, 0, size); }
-                catch {
+                catch (Exception e) {
                     SafeDispose(cs);
                     ct.Dispose();
-                    return TaskResult.InvalidPasswordOrDataCorrupted;
+                    if (Logger == null) return TaskResult.InvalidPasswordOrDataCorrupted;
+                    else return (TaskResult)Logger?.Abort(TaskResult.InvalidPasswordOrDataCorrupted, e);
                 }
 
+                var checkpoint2 = Logger?.OpenCheckpoint("WriteResultToStream");
                 while (nRead > 0) {
+                    written += nRead;
                     try {
                         ms.Write(temp, 0, nRead);
-                        nRead = cs.Read(temp, 0, size);
-                    } catch {
+                    } catch (Exception e) {
                         SafeDispose(cs);
                         ct.Dispose();
-                        return TaskResult.InvalidPasswordOrDataCorrupted;
+                        if (Logger == null) return TaskResult.StreamWriteError;
+                        else return (TaskResult)Logger?.Abort(TaskResult.StreamWriteError, e);
+                    }
+                    try {
+                        nRead = cs.Read(temp, 0, size);
+                    } catch (Exception e) {
+                        SafeDispose(cs);
+                        ct.Dispose();
+                        if (Logger == null) return TaskResult.InvalidPasswordOrDataCorrupted;
+                        else return (TaskResult)Logger?.Abort(TaskResult.InvalidPasswordOrDataCorrupted, e);
                     }
                 }
+                Logger?.CloseCheckpoint(checkpoint2, written);
             }
 
             result = ms.ToArray();
             ct.Dispose();
             ms.Dispose();
+            Logger?.CloseCheckpoint(checkpoint, length);
             return TaskResult.Success;
         }
 
@@ -553,6 +606,9 @@ namespace DataChest {
 
         internal Option Option {
             get { return m_option; }
+        }
+        internal static PerformanceLogger Logger {
+            get { return m_log; }
         }
     }
 }

@@ -18,17 +18,15 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Text;
 
 namespace DataChest {
     /// <summary>
     /// 성능 기록기입니다.<br />
     /// A performance logger.
     /// </summary>
-    sealed class PerformanceLogger {
+    sealed class PerformanceLogger : IDisposable {
         /// <summary>
         /// 성능 기록에 사용되는 체크포인트입니다.<br />
         /// Checkpoint used by performance logging.
@@ -100,14 +98,15 @@ namespace DataChest {
 
         readonly Stopwatch m_sw;
         readonly bool g_enabled;
-        readonly StringBuilder m_buffer;
+        readonly StreamWriter m_writer;
         int m_checkpointLevels = 0;
         
         public PerformanceLogger(DataChest dc) {
             g_enabled = dc.Option.Verbose;
             if (g_enabled) {
                 m_sw = new Stopwatch();
-                m_buffer = new StringBuilder();
+                m_writer = new StreamWriter(Console.OpenStandardOutput(), Console.OutputEncoding);
+                m_writer.AutoFlush = true;
             }
         }
         
@@ -122,10 +121,10 @@ namespace DataChest {
         public void Start() {
             if (!Enabled) return;
             
-            m_buffer.AppendLine(
+            m_writer.WriteLine(
                 string.Format(
                     SR.GetString("DC_PerformanceLogging_Start"),
-                    m_sw.Elapsed));
+                    m_sw.Elapsed.ToString()));
             m_sw.Start();
         }
 
@@ -141,8 +140,8 @@ namespace DataChest {
             if (!Enabled) return null;
             if (!m_sw.IsRunning) return null;
 
-            m_buffer.Append(' ', m_checkpointLevels * 2);
-            m_buffer.AppendLine(
+            m_writer.Write(new string(' ', m_checkpointLevels * 2));
+            m_writer.WriteLine(
                 string.Format(SR.GetString("DC_PerformanceLogging_Checkpoint_Created"),
                 m_sw.Elapsed,
                 name));
@@ -172,8 +171,8 @@ namespace DataChest {
             string s;
             if (size == 0) s = string.Format("<{0}>", SR.GetString("DC_PerformanceLogging_None"));
             else s = UnitHelper.ComputeSpeed(size, checkpoint.ElapsedTime);
-            m_buffer.Append(' ', (m_checkpointLevels - 1) * 2);
-            m_buffer.AppendLine(
+            m_writer.Write(new string(' ', (m_checkpointLevels - 1) * 2));
+            m_writer.WriteLine(
                 string.Format(
                     SR.GetString("DC_PerformanceLogging_Checkpoint_Finished"),
                     m_sw.Elapsed,
@@ -200,7 +199,7 @@ namespace DataChest {
             if (!m_sw.IsRunning) return;
 
             m_sw.Stop();
-            m_buffer.AppendLine(
+            m_writer.WriteLine(
                 string.Format(
                     SR.GetString("DC_PerformanceLogging_WriteLine"),
                     m_sw.Elapsed,
@@ -232,14 +231,15 @@ namespace DataChest {
         /// </param>
         public TaskResult Abort(TaskResult r, Exception e) {
             if (!Enabled) return r;
+            if (!m_sw.IsRunning) return r;
 
             m_sw.Stop();
-            m_buffer.AppendLine(
+            m_writer.WriteLine(
                 string.Format(
                     SR.GetString("DC_PerformanceLogging_Aborted"),
                     m_sw.Elapsed,
                     SR.GetString("DC_PerformanceLogging_Exception"),
-                    e.ToString(),
+                    e.ToString() ?? string.Format("<{0}>", SR.GetString("DC_PerformanceLogging_None")),
                     SR.GetString("DC_PerformanceLogging_Error"),
                     r.ToString()));
             return r;
@@ -252,14 +252,7 @@ namespace DataChest {
             if (!Enabled) return;
             m_sw.Stop();
 
-            m_buffer.AppendLine(SR.GetString("DC_PerformanceLogging_Ended"));
-        }
-        /// <summary>
-        /// 성능 기록을 반환합니다.<br />
-        /// Returns a performance log.
-        /// </summary>
-        public override string ToString() {
-            return m_buffer.ToString();
+            m_writer.WriteLine(SR.GetString("DC_PerformanceLogging_Ended"));
         }
 
         /// <summary>
@@ -268,6 +261,12 @@ namespace DataChest {
         /// </summary>
         public bool Enabled {
             get { return g_enabled; }
+        }
+
+        public void Dispose() {
+            if (!Enabled) return;
+
+            m_writer.Dispose();
         }
     }
 }

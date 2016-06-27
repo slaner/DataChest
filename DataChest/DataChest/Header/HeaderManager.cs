@@ -51,6 +51,7 @@ namespace DataChest {
         /// A variable to store task result.
         /// </param>
         public static HeaderBase Create(ushort version, out TaskResult result) {
+            var checkpoint = DataChest.Logger?.OpenCheckpoint(nameof(Create));
             result = TaskResult.Success;
             if (!m_headers.ContainsKey(version)) {
                 result = TaskResult.NotSupportedVersion;
@@ -58,8 +59,9 @@ namespace DataChest {
             }
             HeaderBase hdr;
             try { hdr = (HeaderBase)Activator.CreateInstance(m_headers[version]); }
-            catch {
-                result = TaskResult.InvalidHeaderClass;
+            catch (Exception e) {
+                if (DataChest.Logger == null) result = TaskResult.InvalidHeaderClass;
+                result = (TaskResult) DataChest.Logger?.Abort(TaskResult.InvalidHeaderClass, e);
                 return null;
             }
             return hdr;
@@ -97,6 +99,7 @@ namespace DataChest {
         /// A variable to store task result.
         /// </param>
         public static HeaderBase FromStream(Stream s, ushort version, out TaskResult result) {
+            var checkpoint = DataChest.Logger?.OpenCheckpoint(nameof(FromStream));
             result = TaskResult.Success;
             HeaderBase hdr;
             if (version == ushort.MaxValue) {
@@ -109,6 +112,8 @@ namespace DataChest {
 
             BinaryReader br = new BinaryReader(s);
             hdr.ProcessFields(br);
+
+            DataChest.Logger?.CloseCheckpoint(checkpoint, 0);
             return hdr;
         }
 
@@ -186,17 +191,25 @@ namespace DataChest {
         /// A variable to store version information.
         /// </param>
         public static TaskResult GetVersionFromStream(Stream s, out ushort version) {
+            var checkpoint = DataChest.Logger?.OpenCheckpoint(nameof(GetVersionFromStream));
             version = ushort.MaxValue;
 
             // Signature & Version check
             BinaryReader br = new BinaryReader(s);
             ushort sig = br.ReadUInt16();
-            if (sig != HeaderBase.HeaderSignature) return TaskResult.InvalidSignature;
+            if (sig != HeaderBase.HeaderSignature) {
+                if (DataChest.Logger == null) return TaskResult.InvalidSignature;
+                else return (TaskResult)DataChest.Logger?.Abort(TaskResult.InvalidSignature, null);
+            }
 
             version = br.ReadUInt16();
             if (s.CanSeek) s.Seek(0, SeekOrigin.Begin);
-            if (m_headers.ContainsKey(version)) return TaskResult.Success;
-            else return TaskResult.NotSupportedVersion;
+            if (m_headers.ContainsKey(version)) {
+                DataChest.Logger?.CloseCheckpoint(checkpoint, 0);
+                return TaskResult.Success;
+            }
+            if (DataChest.Logger == null) return TaskResult.NotSupportedVersion;
+            else return (TaskResult)DataChest.Logger?.Abort(TaskResult.NotSupportedVersion, null);
         }
     }
 }

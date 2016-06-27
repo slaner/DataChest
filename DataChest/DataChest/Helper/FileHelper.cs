@@ -27,6 +27,30 @@ namespace DataChest {
     /// </summary>
     static class FileHelper {
         /// <summary>
+        /// 지정된 이름을 가진 파일을 만듭니다.<br />
+        /// Create a file for specified filename.
+        /// </summary>
+        /// <param name="fileName">
+        /// 만들 파일입니다.<br />
+        /// Filename to be created.
+        /// </param>
+        /// <param name="fs">
+        /// 만들어진 파일의 스트림이 저장될 변수입니다.<br />
+        /// A variable to store file stream which created.
+        /// </param>
+        public static TaskResult CreateFileStream(string fileName, bool overwrite, out FileStream fs) {
+            var checkpoint = DataChest.Logger?.OpenCheckpoint(nameof(CreateFileStream));
+            fs = null;
+            try {
+                fs = new FileStream(fileName, overwrite ? FileMode.Create : FileMode.CreateNew);
+            } catch (Exception e) {
+                if (DataChest.Logger == null) return TaskResult.IOError;
+                else return (TaskResult) DataChest.Logger?.Abort(TaskResult.IOError, e);
+            }
+            DataChest.Logger?.CloseCheckpoint(checkpoint, 0);
+            return TaskResult.Success;
+        }
+        /// <summary>
         /// 지정한 파일에 대한 파일 스트림을 엽니다.<br />
         /// Open a file stream for specified file.
         /// </summary>
@@ -39,22 +63,30 @@ namespace DataChest {
         /// A variable to store file stream.
         /// </param>
         public static TaskResult OpenFileStream(string fileName, out FileStream fs) {
+            var checkpoint = DataChest.Logger?.OpenCheckpoint(nameof(OpenFileStream));
             fs = null;
             try {
                 fs = File.OpenRead(fileName);
-            } catch (FileNotFoundException) {
-                return TaskResult.FileNotFound;
-            } catch (UnauthorizedAccessException) {
-                return TaskResult.AccessDenied;
-            } catch (DirectoryNotFoundException) {
-                return TaskResult.DirectoryNotFound;
-            } catch (PathTooLongException) {
-                return TaskResult.PathTooLong;
-            } catch (ArgumentException) {
-                return TaskResult.InvalidParameter;
-            } catch {
-                return TaskResult.IOError;
+            } catch (FileNotFoundException e1) {
+                if (DataChest.Logger == null) return TaskResult.FileNotFound;
+                return (TaskResult)DataChest.Logger?.Abort(TaskResult.FileNotFound, e1);
+            } catch (UnauthorizedAccessException e2) {
+                if (DataChest.Logger == null) return TaskResult.AccessDenied;
+                return (TaskResult)DataChest.Logger?.Abort(TaskResult.AccessDenied, e2);
+            } catch (DirectoryNotFoundException e3) {
+                if (DataChest.Logger == null) return TaskResult.DirectoryNotFound;
+                return (TaskResult)DataChest.Logger?.Abort(TaskResult.DirectoryNotFound, e3);
+            } catch (PathTooLongException e4) {
+                if (DataChest.Logger == null) return TaskResult.PathTooLong;
+                return (TaskResult)DataChest.Logger?.Abort(TaskResult.PathTooLong, e4);
+            } catch (ArgumentException e5) {
+                if (DataChest.Logger == null) return TaskResult.InvalidParameter;
+                return (TaskResult)DataChest.Logger?.Abort(TaskResult.InvalidParameter, e5);
+            } catch (Exception e) {
+                if (DataChest.Logger == null) return TaskResult.IOError;
+                return (TaskResult)DataChest.Logger?.Abort(TaskResult.IOError, e);
             }
+            DataChest.Logger?.CloseCheckpoint(checkpoint, fs.Length);
             return TaskResult.Success;
         }
         /// <summary>
@@ -70,6 +102,7 @@ namespace DataChest {
         /// A variable to store output path.
         /// </param>
         public static TaskResult BuildOutput(Option option, out string output) {
+            var checkpoint = DataChest.Logger?.OpenCheckpoint(nameof(BuildOutput));
             output = null;
             string extension;
             extension = option.Decrypt ? string.Empty : ".dcf";
@@ -108,8 +141,10 @@ namespace DataChest {
                         output = Environment.CurrentDirectory + "/" + dir;
 
                         // 디렉터리가 있는지 확인한다.
-                        if (!Directory.Exists(output))
-                            return TaskResult.DirectoryNotFound;
+                        if (!Directory.Exists(output)) {
+                            if (DataChest.Logger == null) return TaskResult.DirectoryNotFound;
+                            else return (TaskResult)DataChest.Logger?.Abort(TaskResult.DirectoryNotFound, null);
+                        }
 
                         output += filename;
                     }
@@ -118,13 +153,17 @@ namespace DataChest {
                     else {
 
                         // 디렉터리가 있는지 확인한다.
-                        if (!Directory.Exists(dir))
-                            return TaskResult.DirectoryNotFound;
+                        if (!Directory.Exists(dir)) {
+                            if (DataChest.Logger == null) return TaskResult.DirectoryNotFound;
+                            else return (TaskResult)DataChest.Logger?.Abort(TaskResult.DirectoryNotFound, null);
+                        }
 
                         output = dir + "/" + filename;
                     }
                 }
             }
+
+            DataChest.Logger?.CloseCheckpoint(checkpoint, 0);
             return TaskResult.Success;
         }
         /// <summary>
