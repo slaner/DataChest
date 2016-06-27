@@ -75,8 +75,7 @@ namespace DataChest {
                 hdr = HeaderManager.FromStream(s, out r);
                 if (r != TaskResult.Success) {
                     s.Dispose();
-                    if (Logger == null) return r;
-                    else return (TaskResult)Logger?.Abort(r, null);
+                    return r;
                 }
                 
                 if (!m_option.DisableVerification) {
@@ -101,16 +100,19 @@ namespace DataChest {
 
             if (m_option.DisableVerification || !m_option.Decrypt) {
                 s.Dispose();
+                Logger?.CloseCheckpoint(checkpoint, 0);
                 return r;
             }
             
             hash = HashHelper.ComputeUInt32(result);
             if (hdr.RChecksum != hash) {
                 s.Dispose();
-                return TaskResult.IncorrectRawDataChecksum;
+                if (Logger == null) return TaskResult.IncorrectRawDataChecksum;
+                else return (TaskResult)Logger?.Abort(TaskResult.IncorrectRawDataChecksum, null);
             }
 
             s.Dispose();
+            Logger?.CloseCheckpoint(checkpoint, 0);
             return TaskResult.Success;
         }
         /// <summary>
@@ -301,8 +303,11 @@ namespace DataChest {
             r = FileHelper.OpenFileStream(m_option.In[0], out fs);
             if (r != TaskResult.Success) return r;
 
+            Logger?.SetActualSize(fs.Length);
             if (m_option.RunTest) {
                 r = TestProcess(fs);
+                Logger?.End();
+                return r;
             }
 
             string output;
