@@ -46,22 +46,13 @@ namespace DataChest {
                 return 0;
             }
 
-            if (!Parser.Default.ParseArguments(args, option)) {
-                return (int)TaskResult.InvalidParameter;
-            }
-
-            if (option.ShowVersion) {
-                return ShowVersionInfo();
-            }
-            if (option.ShowAlgorithmList) {
-                return ShowAlgorithmList();
-            }
+            if (!Parser.Default.ParseArguments(args, option)) return (int)TaskResult.InvalidParameter;
+            if (option.ShowVersion) return ShowVersionInfo();
+            if (option.ShowAlgorithmList) return ShowAlgorithmList();
             
             DataChest dc = new DataChest(option);
             TaskResult result = dc.Process();
-            if (result == TaskResult.InvalidParameter) Console.WriteLine(option.GetUsage());
             dc.Dispose();
-            Console.WriteLine("RESULT: {0} ({1})", result, (int)result);
             return (int) result;
         }
 
@@ -80,14 +71,14 @@ namespace DataChest {
 #endif
                 + ".", 2016
         );
-            Console.WriteLine("프로그램 정보:");
+            Console.WriteLine(SR.GetString("DC_Application_Info"));
             Console.WriteLine("  " + header);
             Console.WriteLine("  " + copyright);
             Console.WriteLine();
-            Console.WriteLine("라이센스 정보:");
+            Console.WriteLine(SR.GetString("DC_License_Info"));
             Console.WriteLine("  GPLv2");
             Console.WriteLine();
-            Console.WriteLine("사용 라이브러리:");
+            Console.WriteLine(SR.GetString("DC_Used_Library"));
             Console.WriteLine("  CommandLine");
             Console.WriteLine("  + Author  : gsscoder");
             Console.WriteLine("  + Homepage: https://commandline.codeplex.com");
@@ -96,21 +87,12 @@ namespace DataChest {
             return (int)TaskResult.Success;
         }
         static int ShowAlgorithmList() {
-            Console.WriteLine("사용 가능한 알고리즘 목록:");
+            Console.WriteLine(SR.GetString("DC_Available_Algorithm_List"));
             string[] algorithms = Enum.GetNames(typeof(Algorithms));
             for (int i = 0; i < algorithms.Length - 1; i++)
                 Console.WriteLine("  " + i + " " + algorithms[i]);
 
             return (int)TaskResult.Success;
-        }
-
-        static int SetError(TaskResult result) {
-            return SetError(result, ErrorFormatter.GetErrorMessageFromTaskResult(result));
-        }
-        static int SetError(TaskResult result, string message) {
-            Console.WriteLine("오류 코드: " + result + " (0x{0:X4})", (int)result);
-            Console.WriteLine("오류 내용: " + message);
-            return (int)result;
         }
     }
 }

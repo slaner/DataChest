@@ -61,20 +61,20 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DataChest\Common.cs" />
-    <Compile Include="DataChest\Core\HashAPI.cs" />
     <Compile Include="DataChest\DataChest.cs" />
-    <Compile Include="DataChest\ErrorFormatter\ErrorFormatter.cs" />
     <Compile Include="DataChest\Header\DC_HEADER_1.cs" />
     <Compile Include="DataChest\Header\DC_HEADER_2.cs" />
     <Compile Include="DataChest\Header\HeaderBase.cs" />
     <Compile Include="DataChest\Header\HeaderManager.cs" />
     <Compile Include="DataChest\Header\IHeader.cs" />
     <Compile Include="DataChest\Helper\FileHelper.cs" />
+    <Compile Include="DataChest\Helper\HashHelper.cs" />
     <Compile Include="DataChest\Helper\IDHelper.cs" />
     <Compile Include="DataChest\Helper\UnitHelper.cs" />
     <Compile Include="DataChest\Performance\PerformanceLogger.cs" />
     <Compile Include="DataChest\AlgorithmManager.cs" />
-    <Compile Include="DataChest\ThirdPartyCompatible\Options.cs" />
+    <Compile Include="DataChest\SR.cs" />
+    <Compile Include="DataChest\ThirdPartyCompatible\Option.cs" />
     <Compile Include="DataChest\TaskResult.cs" />
     <Compile Include="CommandLine\Attributes\AssemblyLicenseAttribute.cs" />
     <Compile Include="CommandLine\Attributes\AssemblyUsageAttribute.cs" />
@@ -143,6 +143,12 @@
       <ProductName>Windows Installer 4.5</ProductName>
       <Install>true</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="language.en-US.resx" />
+    <EmbeddedResource Include="language.ko.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
