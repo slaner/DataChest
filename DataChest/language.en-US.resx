@@ -312,4 +312,13 @@
   <data name="DC_PerformanceLogging_WriteLine" xml:space="preserve">
     <value>[{0}] {1}</value>
   </data>
+  <data name="DC_PerformanceLogging_ActualSize" xml:space="preserve">
+    <value>Actual size</value>
+  </data>
+  <data name="DC_PerformanceLogging_Summary" xml:space="preserve">
+    <value>{0}: {1}{2}: {3}{4}: {5}</value>
+  </data>
+  <data name="DC_PerformanceLogging_Total_ElapsedTime" xml:space="preserve">
+    <value>Total elapsed time</value>
+  </data>
 </root>
